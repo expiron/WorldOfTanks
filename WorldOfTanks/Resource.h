@@ -1,11 +1,11 @@
-//{{NO_DEPENDENCIES}}
+ï»¿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by WorldOfTanks.rc
 //
 
 #define IDS_APP_TITLE			103
 
-// ÐÂ¶ÔÏóµÄÏÂÒ»×éÄ¬ÈÏÖµ
+// æ–°å¯¹è±¡çš„ä¸‹ä¸€ç»„é»˜è®¤å€¼
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS

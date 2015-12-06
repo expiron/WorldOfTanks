@@ -1,4 +1,4 @@
-// WorldOfTanks.cpp : �������̨Ӧ�ó������ڵ㡣
+﻿// WorldOfTanks.cpp : 定义控制台应用程序的入口点。
 //
 
 #include "stdafx.h"
@@ -9,7 +9,7 @@
 #endif
 
 
-// Ψһ��Ӧ�ó������
+// 唯一的应用程序对象
 
 CWinApp theApp;
 
@@ -23,22 +23,22 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 
 	if (hModule != NULL)
 	{
-		// ��ʼ�� MFC ����ʧ��ʱ��ʾ����
+		// 初始化 MFC 并在失败时显示错误
 		if (!AfxWinInit(hModule, NULL, ::GetCommandLine(), 0))
 		{
-			// TODO: ���Ĵ�������Է���������Ҫ
-			_tprintf(_T("����: MFC ��ʼ��ʧ��\n"));
+			// TODO: 更改错误代码以符合您的需要
+			_tprintf(_T("错误: MFC 初始化失败\n"));
 			nRetCode = 1;
 		}
 		else
 		{
-			// TODO: �ڴ˴�ΪӦ�ó������Ϊ��д���롣
+			// TODO: 在此处为应用程序的行为编写代码。
 		}
 	}
 	else
 	{
-		// TODO: ���Ĵ�������Է���������Ҫ
-		_tprintf(_T("����: GetModuleHandle ʧ��\n"));
+		// TODO: 更改错误代码以符合您的需要
+		_tprintf(_T("错误: GetModuleHandle 失败\n"));
 		nRetCode = 1;
 	}
 
