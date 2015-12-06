@@ -30,12 +30,33 @@
     <ClInclude Include="WorldOfTanks.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="GameCore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Wot.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="WorldOfTanks.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Wot.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
