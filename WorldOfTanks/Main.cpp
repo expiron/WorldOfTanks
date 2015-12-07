@@ -76,7 +76,7 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 ReportResult:
 	cout<<"The report:"<<endl;
 	gameCore.ReportResult();
-	::Sleep(2000);
+	::Sleep(1000);
 	//Cleaning.
 ReleaseResource:
 	delete []pszCommand1;

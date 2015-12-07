@@ -197,7 +197,7 @@ bool Player::WriteCommandReport(CmdRpt& rpt)
 bool Player::InputStringsPreProcess()
 {
 	DWORD dwRead = 0;
-	Sleep(500);    //Timeout
+	Sleep(25);    //Timeout
 
 	ZeroMemory(pszOutput,2048);
 	DWORD dwExitCode;
@@ -207,9 +207,23 @@ bool Player::InputStringsPreProcess()
 		cerr<<"选手程序异常结束！"<<endl;
 		return false;
 	}
-	BOOL bRet = ReadFile(hOutputRead,pszOutput,2048,&dwRead,NULL);
+	//BOOL bRet = ReadFile(hOutputRead,pszOutput,2048,&dwRead,NULL);
+	char tmp[2048];
+	ZeroMemory(tmp,2048);
+	ReadFile(hOutputRead,tmp,2048,&dwRead,NULL);
+	if(tmp[0] == '{')
+		strcpy(pszOutput,tmp + 3);
+	else
+		strcpy(pszOutput,tmp);
+	while(!strchr(tmp,'}'))
+	{
+		ZeroMemory(tmp,2048);
+		ReadFile(hOutputRead,tmp,2048,&dwRead,NULL);
+		strcat(pszOutput,tmp);
+	}
+	pszOutput[strlen(pszOutput)-3] = '\0';
 	//写入日志文件.
-	if(bRet && flog)
+	if(flog)
 		(*flog)<<"<<"<<pszOutput<<endl;
 	else
 		return false;
