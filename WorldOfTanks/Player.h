@@ -25,12 +25,11 @@ public:
 	bool ReadCommand(Command&);
 	//写入命令执行结果.
 	bool WriteCommandReport(CmdRpt&);
-	//输入PlayerInfo.
-	//bool InputPlayerInfo(PlayerInfo&);
 	//输入Tank.
 	bool InputTank(Tank&);
+	
 protected:
-	void InputStringsPreProcess();
+	bool InputStringsPreProcess();
 
 private:
 	//TCHAR* pszCommandLine;      //应用程序启动命令行.
@@ -46,4 +45,5 @@ private:
 	ofstream* flog;             //选手输入输出信息日志文件.
 
 	bool firsthand;             //是否为先手.
+	//static bool bTimeOut;
 };

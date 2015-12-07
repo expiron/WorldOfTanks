@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void AnalyseCommandLine(int,TCHAR**,TCHAR*,TCHAR*);
+void AnalyseCommandLine(int,TCHAR**,TCHAR*,TCHAR*,char*,char*);
 
 void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
@@ -15,10 +15,17 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 	GameCore gameCore;
 	TCHAR* pszCommand1 = new TCHAR[1024];
 	TCHAR* pszCommand2 = new TCHAR[1024];
+	char* pszPlayerNameA = new char[128];
+	char* pszPlayerNameB = new char[128];
 	ZeroMemory(pszCommand1,1024*sizeof(TCHAR));
 	ZeroMemory(pszCommand2,1024*sizeof(TCHAR));
 
-	AnalyseCommandLine(argc,argv,pszCommand1,pszCommand2);
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwSize = 0;
+	COORD coo;
+	coo.Y = 2;
+
+	AnalyseCommandLine(argc,argv,pszCommand1,pszCommand2,pszPlayerNameA,pszPlayerNameB);
 	/*AfxMessageBox(pszCommand1);
 	AfxMessageBox(pszCommand2);*/
 
@@ -30,7 +37,7 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 	}
 
 	gameCore.SetPlayer(&playerA,&playerB);
-	gameCore.SetPlayerName("a","b");
+	gameCore.SetPlayerName(pszPlayerNameA,pszPlayerNameB);
 
 	if(!gameCore.Initialize())
 	{
@@ -43,41 +50,46 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 	gameCore.DistributeData();
 
 	cout<<"The game is running....."<<endl;
+	cout<<"Round.01..."<<endl;
+	int round = 1;
 
 	while( true )
 	{
-		gameCore.PlayerAsTurn();
-		gameCore.PlayerBsTurn();
+		coo.X = 6;
+		FillConsoleOutputCharacterA(hOut,round / 10 + 48,1,coo,&dwSize);
+		coo.X = 7;
+		FillConsoleOutputCharacterA(hOut,round % 10 + 48,1,coo,&dwSize);
+
+		if(!gameCore.PlayerAsTurn())
+			goto ReportResult;
+		if(!gameCore.PlayerBsTurn())
+			goto ReportResult;
 
 		if(gameCore.IsGameOver())
 		{
-			cout<<"The report:"<<endl;
-			gameCore.ReportResult();
-			break;
+			goto ReportResult;
 		}
+		round++;
 	}
 	
+	//Report
+ReportResult:
+	cout<<"The report:"<<endl;
+	gameCore.ReportResult();
+	::Sleep(2000);
 	//Cleaning.
-	ReleaseResource:
+ReleaseResource:
 	delete []pszCommand1;
 	delete []pszCommand2;
 	return;
 }
 //分析命令行参数，解析生成选手程序的启动命令行.
-void AnalyseCommandLine(int argc,TCHAR* argv[],TCHAR* psz1,TCHAR* psz2)
+void AnalyseCommandLine(int argc,TCHAR* argv[],TCHAR* psz1,TCHAR* psz2,char* name1,char* name2)
 {
-	lstrcpy(psz1,_T("a.exe"));
-	lstrcpy(psz2,_T("b.exe"));
+	lstrcpy(psz1,_T("a"));
+	strcpy(name1,"a");
+	lstrcpy(psz2,_T("b"));
+	strcpy(name2,"b");
+	
 	return;
-	//当前只是默认 a.exe 和 b.exe ，命令行解析后待开发.
 }
-/*
-程序交互：
-输入地图信息，敌我坦克信息。
-输出三阶段动作指令。
-*/
-/*
-选手运行过程.
-1.读入先后手.
-2.选择阵营.
-*/

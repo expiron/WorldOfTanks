@@ -3,6 +3,7 @@
 #include "Player.h"
 
 using namespace std;
+
 //构造函数.
 Player::Player()
 {
@@ -26,13 +27,6 @@ Player::Player()
 //析构函数.
 Player::~Player()
 {
-	//cout<<"TerminateProcess."<<pi.dwProcessId<<endl;
-	/*HANDLE hProcess = ::OpenProcess(PROCESS_ALL_ACCESS,FALSE,pi.dwProcessId);
-    if(hProcess!=NULL)
-    {
-        //终止进程
-        ::TerminateProcess(hProcess,0);
-    }*/
 	TerminateProcess(pi.hProcess,0);
 	if(fdebug)
 	{
@@ -126,7 +120,9 @@ bool Player::WriteFirsthand(bool initiative)
 }
 bool Player::ChooseFaction(Faction& fac)
 {
-	InputStringsPreProcess();
+	if(!InputStringsPreProcess())
+		return false;
+
 	if(pszOutput[0] == '1')
 		fac = Axis;              //轴心国.
 	else
@@ -173,7 +169,8 @@ bool Player::WriteLastCommand(Command& cmd,CmdRpt& rpt)
 }
 bool Player::ReadCommand(Command& cmd)
 {
-	InputStringsPreProcess();
+	if(!InputStringsPreProcess())
+		return false;
 	istrstream strin(pszOutput);
 
 	strin>>cmd;
@@ -197,14 +194,24 @@ bool Player::WriteCommandReport(CmdRpt& rpt)
 	else                                 //写入失败.
 		return false;
 }
-void Player::InputStringsPreProcess()
+bool Player::InputStringsPreProcess()
 {
-	DWORD dwRead;
-	Sleep(500);   //timeout
+	DWORD dwRead = 0;
+	Sleep(500);    //Timeout
 
 	ZeroMemory(pszOutput,2048);
-	ReadFile(hOutputRead,pszOutput,2048,&dwRead,NULL);
+	DWORD dwExitCode;
+	GetExitCodeProcess(pi.hProcess,&dwExitCode);
+	if(dwExitCode != STILL_ACTIVE)
+	{
+		cerr<<"选手程序异常结束！"<<endl;
+		return false;
+	}
+	BOOL bRet = ReadFile(hOutputRead,pszOutput,2048,&dwRead,NULL);
 	//写入日志文件.
-	if(flog)
+	if(bRet && flog)
 		(*flog)<<"<<"<<pszOutput<<endl;
+	else
+		return false;
+	return true;
 }

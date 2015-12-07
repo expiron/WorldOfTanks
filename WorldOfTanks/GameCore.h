@@ -27,7 +27,7 @@ public:
 	bool IsGameOver();
 	//输出游戏结果.
 	bool ReportResult();
-
+	void SetError(int);
 protected:
 	//初始化坦克数据.
 	void InitializeTank(int,Faction,TankType,Point,Tank&);
@@ -44,9 +44,12 @@ protected:
 	//写入视频文件.
 	void WriteVideo_Move(int,Point);
 	void WriteVideo_Attack(int,int,int,int,int);
+	void WriteVideo_HeavyAttack(int,int,int,int);
+	void WriteVideo_End(int,int);
 	//写入文字战报.
 	void WriteComment_Move(int,Point);
 	void WriteComment_Attack(int,int,int,int,int);
+	void WriteComment_HeavyAttack(int,int,int,int);
 	//写入警告.
 	void WriteWarning(int,const char*);
 	//判断坐标是否合法.
@@ -71,9 +74,11 @@ private:
 	//选手A得分.
 	int      scoreA;
 	float    valueA;
+	int      lifeA;
 	//选手B得分.
 	int      scoreB;
 	float    valueB;
+	int      lifeB;
 	//记录最后一条命令.
 	Command  lastCommand;
 	//最后一条命令执行结果.
@@ -82,6 +87,8 @@ private:
 	bool     moved[10];
 	//坦克状态变量.
 	bool     controled[10];
+	//种子散列值.
+	int      hseed;
 	//选手对象.
 	Player*  m_pPlayerA;
 	Player*  m_pPlayerB;
@@ -96,6 +103,7 @@ private:
 	ofstream* fwarning;
 	//错误代码.
 	int m_nErrorCode;
+	int nError;
 	int m_nLastRound1;
 	int m_nLastRound2;
 };

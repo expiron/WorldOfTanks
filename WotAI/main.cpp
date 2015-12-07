@@ -1,9 +1,9 @@
 ﻿#include <stdio.h>
-
 #include "Wot.h"
 
 int main()
 {
+	int round = 1;    //回合数：A操作一步、B操作一步算作一个回合.
 	//TODO: 第一步：判断自己是先手还是后手.
 	if(IsFirsthand())    //true:先手, false:后手.
 	{
@@ -24,32 +24,39 @@ int main()
 
 	//TODO: 第四步：游戏开始.
 	Command myCmd,enemyCmd;    //我方、敌方命令.
-	CmdRpt  myRpt,enemyRpt;    //我方、敌方命令报告.
+	CmdRpt  myRpt,enemyRpt;    //我方、敌方命令反馈.
 	if(IsFirsthand())
 	{
-		//TODO: 先手先走一步.
+		myCmd = Command();    //将命令置为空命令.
+		//TODO: 先手先走一步.在此处添加自己的策略.
+		//...
 		OutputCommand(myCmd);    //输出我方命令.
 		InputCommandReport(myRpt);    //读入我方命令的执行反馈.
 
-		//TODO: 根据执行反馈更新游戏数据.
-		//...
+		//更新游戏数据.
+		UpdateGameData(true,gdata,myCmd,myRpt);    //更新己方数据.
 	}
-
+	else
+		round--;    //后手先减1.(为适应程序结构)
+	
 	//TODO: 无限循环：读入对方命令、输出己方命令
 	while( true )
 	{
-		//TODO: 读入敌方命令及命令反馈.
+		//读入敌方命令及命令反馈.
 		InputEnemyCommand(enemyCmd,enemyRpt);
 
-		//TODO: 根据执行反馈更新游戏数据.
+		//更新游戏数据.
+		UpdateGameData(false,gdata,enemyCmd,enemyRpt);    //更新敌方数据.
+		round++;
+		
+		myCmd = Command();    //将命令置为空命令.
+		//TODO: 根据敌方命令，输出己方命令.在此处添加自己的策略.
 		//...
-
-		//TODO: 根据敌方命令，输出己方命令.
 		OutputCommand(myCmd);
 		InputCommandReport(myRpt);
 
-		//TODO: 根据执行反馈更新游戏数据.
-		//...
+		//更新游戏数据.
+		UpdateGameData(true,gdata,myCmd,myRpt);    //更新己方数据.
 	}
 	return 0;
 }

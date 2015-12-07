@@ -16,6 +16,7 @@ GameCore::GameCore()
 	ZeroMemory(strNameA,128);
 	ZeroMemory(strNameB,128);
 	m_nErrorCode = 0;
+	nError = 0;
 }
 GameCore::~GameCore()
 {
@@ -142,10 +143,13 @@ bool GameCore::GenerateInitialData()
 	m_nLastRound2 = 0;
 	//双方得分归零.
 	scoreA = scoreB = 0;
-	valueA = valueB = 9.0;
+	valueA = valueB = 12.0;
+	lifeA = lifeB = 5;
 	//重置坦克状态.
 	memset(moved,0,sizeof(moved));
 	memset(controled,0,sizeof(controled));
+	//种子散列值初始化.
+	hseed = 2;
 	return true;
 }
 bool GameCore::DistributeData()
@@ -178,8 +182,21 @@ bool GameCore::DistributeData()
 		return false;
 	}
 
+	//Write Video File.
 	(*fvideo)<<strNameA<<endl
 		<<strNameB<<endl;
+	(*fvideo)<<facA<<facB<<endl;
+	for(int i = 0;i < 8;i++)
+	{
+		for(int j = 0;j < 8;j++)
+			(*fvideo)<<map[i][j];
+		(*fvideo)<<endl;
+	}
+	for(int i = 0;i < 5;i++)
+		(*fvideo)<<tankA[i];
+	for(int i = 0;i < 5;i++)
+		(*fvideo)<<tankB[i];
+	(*fvideo)<<baseHpA<<' '<<baseHpB<<endl;
 
 	return true;
 }
@@ -195,7 +212,13 @@ bool GameCore::PlayerAsTurn()
 	if(round != 1)
 		m_pPlayerA->WriteLastCommand(lastCommand,lastCommandReport);
 	
-	m_pPlayerA->ReadCommand(cmd);
+	if(!m_pPlayerA->ReadCommand(cmd))
+	{
+		//WriteVideo_End(round,2);
+		WriteWarning(1,"AI程序异常结束！");
+		SetError(1);
+		return false;
+	}
 	
 	//Game Logic Processing...
 
@@ -220,7 +243,11 @@ bool GameCore::PlayerAsTurn()
 		rpt.period3 = AttackTank(1,cmd.atkCommand[1]);
 	
 	for(int i = 0;i < 5;i++)    //恢复瘫痪坦克.
+	{
+		if(controled[i])
+			(*fvideo)<<1007<<' '<<i<<endl;
 		controled[i] = false;
+	}
 	//Game Logic Process End.
 
 	m_pPlayerA->WriteCommandReport(rpt);
@@ -237,7 +264,13 @@ bool GameCore::PlayerBsTurn()
 	
 	m_pPlayerB->WriteLastCommand(lastCommand,lastCommandReport);
 	
-	m_pPlayerB->ReadCommand(cmd);
+	if(!m_pPlayerB->ReadCommand(cmd))
+	{
+		//WriteVideo_End(round,1);
+		WriteWarning(2,"AI程序异常结束！");
+		SetError(2);
+		return false;
+	}
 	//Game Logic Processing...
 
 	//Period 1: Move Period.
@@ -261,7 +294,11 @@ bool GameCore::PlayerBsTurn()
 		rpt.period3 = AttackTank(2,cmd.atkCommand[1]);
 	
 	for(int i = 5;i < 10;i++)    //恢复瘫痪坦克.
+	{
+		if(controled[i])
+			(*fvideo)<<1007<<' '<<i<<endl;
 		controled[i] = false;
+	}
 	//Game Logic Process End.
 
 	m_pPlayerB->WriteCommandReport(rpt);
@@ -275,6 +312,8 @@ int GameCore::MoveTank(int nPlayerID,Move m)
 {
 	int nID = m.nID;
 	Point pt = m.pt;
+	if(nID < 0)
+		return 0;
 	if(!IsInMap(pt.x,pt.y))    //非法坐标.
 	{
 		WriteWarning(nPlayerID,"移动坐标为非法坐标.");
@@ -409,6 +448,8 @@ int GameCore::AttackTank(int nPlayerID,Attack cmd)
 	int nIDB = cmd.nID_Target;
 	int damage = 0;
 	int rpt = 0;
+	if(nIDA < 0 || nIDB < 0)
+		return 0;
 	if(nIDA < (nPlayerID - 1) * 5 || nIDA >= nPlayerID * 5)    //操作非法坦克.
 	{
 		WriteWarning(nPlayerID,"操作非法坦克.");
@@ -418,6 +459,11 @@ int GameCore::AttackTank(int nPlayerID,Attack cmd)
 	{
 		if(nPlayerID == 1)
 		{
+			if(baseHpB <= 0)    //基地已爆炸.
+			{
+				WriteWarning(nPlayerID,"攻击目标无效.");
+				return 0;
+			}
 			Tank t = tankA[nIDA];
 			Tank base;
 			base.type = middle; base.pt = Point(6,6); base.hp = baseHpB;
@@ -425,39 +471,52 @@ int GameCore::AttackTank(int nPlayerID,Attack cmd)
 			if(rpt == 3 || rpt == 4)
 				rpt -= 2;
 
-			baseHpB -= damage;    //造成伤害.
-			if(baseHpB <= 0)    //基地炸了.
+			if(rpt)
 			{
-				scoreA += 3;
-				WriteComment_Attack(nIDA,10,damage,0,1);
-				WriteVideo_Attack(nIDA,10,damage,0,1);
-			}
-			else
-			{
-				WriteComment_Attack(nIDA,10,damage,0,0);
-				WriteVideo_Attack(nIDA,10,damage,0,0);
+				baseHpB -= damage;    //造成伤害.
+				if(baseHpB <= 0)    //基地炸了.
+				{
+					scoreA += 3;
+					valueB -= 3.0;
+					WriteComment_Attack(nIDA,10,damage,0,1);
+					WriteVideo_Attack(nIDA,10,damage,0,1);
+				}
+				else
+				{
+					WriteComment_Attack(nIDA,10,damage,0,0);
+					WriteVideo_Attack(nIDA,10,damage,0,0);
+				}
 			}
 		}
 		if(nPlayerID == 2)
 		{
+			if(baseHpA <= 0)    //基地已爆炸.
+			{
+				WriteWarning(nPlayerID,"攻击目标无效.");
+				return 0;
+			}
 			Tank t = tankB[nIDA - 5];
 			Tank base;
-			base.type = middle; base.pt = Point(0,0); base.hp = baseHpA;
+			base.type = middle; base.pt = Point(1,1); base.hp = baseHpA;
 			rpt = CalculateDamage(t,base,damage);
 			if(rpt == 3 || rpt == 4)
 				rpt -= 2;
 
-			baseHpA -= damage;
-			if(baseHpA <= 0)
+			if(rpt)
 			{
-				scoreB += 3;
-				WriteComment_Attack(nIDA,10,damage,0,1);
-				WriteVideo_Attack(nIDA,10,damage,0,1);
-			}
-			else
-			{
-				WriteComment_Attack(nIDA,10,damage,0,0);
-				WriteVideo_Attack(nIDA,10,damage,0,0);
+				baseHpA -= damage;
+				if(baseHpA <= 0)
+				{
+					scoreB += 3;
+					valueA -= 3.0;
+					WriteComment_Attack(nIDA,10,damage,0,1);
+					WriteVideo_Attack(nIDA,10,damage,0,1);
+				}
+				else
+				{
+					WriteComment_Attack(nIDA,10,damage,0,0);
+					WriteVideo_Attack(nIDA,10,damage,0,0);
+				}
 			}
 		}
 		return rpt;
@@ -474,46 +533,64 @@ int GameCore::AttackTank(int nPlayerID,Attack cmd)
 	}
 	if(nPlayerID == 1)
 	{
+		if(tankB[nIDB - 5].hp <= 0)    //攻击目标已阵亡.
+		{
+			WriteWarning(nPlayerID,"攻击阵亡坦克.");
+			return 0;
+		}
 		Tank t1 = tankA[nIDA];
 		Tank t2 = tankB[nIDB - 5];
 		rpt = CalculateDamage(t1,t2,damage);
 		if(rpt == 3 || rpt == 4)
 			controled[nIDB] = true;
 
-		tankB[nIDB - 5].hp -= damage;
-		if(tankB[nIDB - 5].hp <= 0)
+		if(rpt)
 		{
-			scoreA += 1;
-			valueB -= tankB[nIDB - 5].value;
-			WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
-			WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
-		}
-		else
-		{
-			WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
-			WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+			tankB[nIDB - 5].hp -= damage;
+			if(tankB[nIDB - 5].hp <= 0)
+			{
+				scoreA += 1;
+				valueB -= tankB[nIDB - 5].value;
+				lifeB--;
+				WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
+				WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
+			}
+			else
+			{
+				WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+				WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+			}
 		}
 	}
 	if(nPlayerID == 2)
 	{
+		if(tankA[nIDB].hp <= 0)
+		{
+			WriteWarning(nPlayerID,"攻击阵亡坦克.");
+			return 0;
+		}
 		Tank t1 = tankB[nIDA - 5];
 		Tank t2 = tankA[nIDB];
 		rpt = CalculateDamage(t1,t2,damage);
 		if(rpt == 3 || rpt == 4)
 			controled[nIDB] = true;
 
-		tankA[nIDB].hp -= damage;
-		if(tankA[nIDB].hp <= 0)
+		if(rpt)
 		{
-			scoreB += 1;
-			valueA -= tankA[nIDB].value;
-			WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
-			WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
-		}
-		else
-		{
-			WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
-			WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+			tankA[nIDB].hp -= damage;
+			if(tankA[nIDB].hp <= 0)
+			{
+				scoreB += 1;
+				valueA -= tankA[nIDB].value;
+				lifeA--;
+				WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
+				WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),1);
+			}
+			else
+			{
+				WriteComment_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+				WriteVideo_Attack(nIDA,nIDB,damage,((rpt == 3 || rpt == 4)? 1 : 0),0);
+			}
 		}
 	}
 	return rpt;
@@ -533,7 +610,9 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 		WriteWarning(((t1.nID < 5) ? 1 : 2),"攻击阵亡坦克.");
 		return 0;    //被攻击方为阵亡坦克.
 	}
-	srand(time(0));
+	srand(time(0) / hseed++);
+	if(hseed >= 127)
+		hseed = 2;
 	switch(t1.type)
 	{
 	case heavy:           //重型坦克.
@@ -544,14 +623,15 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			if(map[t2.pt.x][t2.pt.y] == forest)
 				t2.armour += 2;
 			p = (t1.ap - t2.armour) / 6.0 * 100;    //概率.
+			//srand(time(0));
 			k = rand() % 100 + 1;    //随机化.
 			if(k <= p)    //命中.
 			{
-				damage += t1.atk; return 1;
+				damage += t1.atk; return 2;
 			}
 			else          //未命中.
 			{
-				damage++; return 2;
+				damage++; return 1;
 			}
 		}
 		else
@@ -564,16 +644,17 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			if(map[t2.pt.x][t2.pt.y] == forest)
 				t2.armour += 2;
 			p = (t1.ap - t2.armour) / 6.0 * 100;
+			//srand(time(0));
 			k = rand() % 100 + 1;
 			if(t2.type == selfPropelled)    //攻击特效.
 				damage++;
 			if(k <= p)    //命中.
 			{
-				damage += t1.atk; return 1;
+				damage += t1.atk; return 2;
 			}
 			else          //未命中.
 			{
-				damage++; return 2;
+				damage++; return 1;
 			}
 		}
 		else
@@ -586,16 +667,17 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			if(map[t2.pt.x][t2.pt.y] == forest)
 				t2.armour += 2;
 			p = (t1.ap - t2.armour) / 6.0 * 100;
+			//srand(time(0));
 			k = rand() % 100 + 1;
 			if(t2.type == heavy)    //攻击特效.
 				damage++;
 			if(k <= p)    //命中.
 			{
-				damage += t1.atk; return 1;
+				damage += t1.atk; return 2;
 			}
 			else          //未命中.
 			{
-				damage++; return 2;
+				damage++; return 1;
 			}
 		}
 		else
@@ -608,14 +690,15 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			if(map[t2.pt.x][t2.pt.y] == forest)
 				t2.armour += 2;
 			p = (t1.ap - t2.armour) / 6.0 * 100;
+			//srand(time(0));
 			k = rand() % 100 + 1;
 			if(k <= p)    //命中.
 			{
-				damage += t1.atk; return 1;
+				damage += t1.atk; return 2;
 			}
 			else          //未命中.
 			{
-				damage++; return 2;
+				damage++; return 1;
 			}
 		}
 		else
@@ -628,6 +711,7 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			if(map[t2.pt.x][t2.pt.y] == forest)
 				t2.armour += 2;
 			p = (t1.ap - t2.armour) / 6.0 * 100;
+			//srand(time(0));
 			k = rand() % 100;
 
 			bool skill = false;
@@ -637,11 +721,11 @@ int GameCore::CalculateDamage(Tank& t1,Tank& t2,int& damage)
 			k = rand() % 100 + 1;
 			if(k <= p)    //命中.
 			{
-				damage += t1.atk; return (skill ? 3 : 1);
+				damage += t1.atk; return (skill ? 4 : 2);
 			}
 			else          //未命中.
 			{
-				damage++; return (skill ? 4 : 2);
+				damage++; return (skill ? 3 : 1);
 			}
 		}
 		else
@@ -655,20 +739,20 @@ void GameCore::HeavyTankSkill()
 	if(tankA[0].hp > 0 && !controled[0])
 	{
 		for(int i = 0;i < 5;i++)
-			if(tankB[i].pt == tankA[0].pt)
+			if(tankB[i].hp > 0 && tankB[i].pt == tankA[0].pt)
 			{
 				tankB[i].hp--;
 				if(tankB[i].hp <= 0)
 				{
 					scoreA += 1;
 					valueB -= tankB[i].value;
-					WriteVideo_Attack(0,tankB[i].nID,1,0,1);
-					WriteComment_Attack(0,tankB[i].nID,1,0,1);
+					WriteVideo_HeavyAttack(0,tankB[i].nID,1,1);
+					WriteComment_HeavyAttack(0,tankB[i].nID,1,1);
 				}
 				else
 				{
-					WriteVideo_Attack(0,tankB[i].nID,1,0,0);
-					WriteComment_Attack(0,tankB[i].nID,1,0,0);
+					WriteVideo_HeavyAttack(0,tankB[i].nID,1,0);
+					WriteComment_HeavyAttack(0,tankB[i].nID,1,0);
 				}
 			}
 	}
@@ -676,20 +760,20 @@ void GameCore::HeavyTankSkill()
 	if(tankB[0].hp > 0 && !controled[5])
 	{
 		for(int i = 0;i < 5;i++)
-			if(tankA[i].pt == tankB[0].pt)
+			if(tankA[i].hp > 0 && tankA[i].pt == tankB[0].pt)
 			{
 				tankA[i].hp--;
 				if(tankA[i].hp <= 0)
 				{
 					scoreB += 1;
 					valueA -= tankA[i].value;
-					WriteVideo_Attack(5,tankA[i].nID,1,0,1);
-					WriteComment_Attack(5,tankA[i].nID,1,0,1);
+					WriteVideo_HeavyAttack(5,tankA[i].nID,1,1);
+					WriteComment_HeavyAttack(5,tankA[i].nID,1,1);
 				}
 				else
 				{
-					WriteVideo_Attack(5,tankA[i].nID,1,0,0);
-					WriteComment_Attack(5,tankA[i].nID,1,0,0);
+					WriteVideo_HeavyAttack(5,tankA[i].nID,1,0);
+					WriteComment_HeavyAttack(5,tankA[i].nID,1,0);
 				}
 			}
 	}
@@ -698,11 +782,11 @@ void GameCore::HeavyTankSkill()
 bool GameCore::IsGameOver()
 {
 	if(round >= 40)    //40回合结束.
-	{
 		return true;
-	}
-	if(scoreA >= 5 || scoreB >= 5)    //分值.
+	if(lifeA <= 0 || lifeB <= 0)
 		return true;
+	/*if(scoreA >= 5 || scoreB >= 5)    //分值.
+		return true;*/
 	return false;
 }
 bool GameCore::ReportResult()
@@ -725,6 +809,63 @@ bool GameCore::ReportResult()
 	(*fresult)<<"PlayerA.score = "<<scoreA<<"  PlayerA.value = "<<valueA<<endl;
 	(*fresult)<<"PlayerB.score = "<<scoreB<<"  PlayerB.value = "<<valueB<<endl;
 
+	if(round >= 40)
+		if(valueA > valueB)
+		{
+			WriteVideo_End(round,1);
+			cout<<"PlayerA wins the game!"<<endl;
+			(*fresult)<<"PlayerA wins the game!"<<endl;
+		}
+		else
+			if(valueB > valueA)
+			{
+				WriteVideo_End(round,2);
+				cout<<"PlayerB wins the game!"<<endl;
+				(*fresult)<<"PlayerB wins the game!"<<endl;
+			}
+			else
+			{
+				WriteVideo_End(round,0);
+
+				cout<<"It ends in a draw."<<endl;
+				(*fresult)<<"It ends in a draw."<<endl;
+			}
+		/*if(scoreA >= 5)
+		{
+			WriteVideo_End(round,1);
+			cout<<"PlayerA wins the game!"<<endl;
+			(*fresult)<<"PlayerA wins the game!"<<endl;
+		}
+		else
+			if(scoreB >= 5)
+			{
+				WriteVideo_End(round,2);
+				cout<<"PlayerB wins the game!"<<endl;
+				(*fresult)<<"PlayerB wins the game!"<<endl;
+			}
+			else
+			{
+				WriteVideo_End(round,0);
+
+				cout<<"It ends in a draw."<<endl;
+				(*fresult)<<"It ends in a draw."<<endl;
+			}*/
+	else
+	{
+		if(nError == 1)
+		{
+			WriteVideo_End(round,2);
+			cout<<"PlayerB wins the game!"<<endl;
+			(*fresult)<<"PlayerB wins the game!"<<endl;
+		}
+		if(nError == 2)
+		{
+			WriteVideo_End(round,1);
+			cout<<"PlayerA wins the game!"<<endl;
+			(*fresult)<<"PlayerA wins the game!"<<endl;
+		}
+	}
+
 	return true;
 }
 bool GameCore::IsInMap(int x,int y)
@@ -744,21 +885,38 @@ void GameCore::WriteVideo_Attack(int atker,int target,int damage,int skill,int d
 	(*fvideo)<<1002<<' '<<atker<<' '<<target<<' '
 		<<damage<<' '<<skill<<' '<<dead<<endl;
 }
+//写入重坦碾压.
+void GameCore::WriteVideo_HeavyAttack(int atker,int target,int damage,int dead)
+{
+	(*fvideo)<<1009<<' '<<atker<<' '<<target<<' '
+		<<damage<<' '<<dead<<endl;
+}
+//写入结束命令.
+void GameCore::WriteVideo_End(int r,int nID)
+{
+	(*fvideo).fill('0');
+	(*fvideo)<<1005<<' '<<setw(2)<<r<<' '<<nID<<endl;
+	/*if(r < 10)
+		(*fvideo)<<0;
+	(*fvideo)<<r<<' '<<nID<<endl;*/
+}
 //写入移动命令文字战报
 void GameCore::WriteComment_Move(int nID,Point pt)
 {
 	if(m_nLastRound1 != round)
 	{
 		m_nLastRound1 = round;
+		if(round != 1)
+			(*fcomment)<<endl;
 		(*fcomment).fill('0');
 		(*fcomment)<<"Round "<<setw(3)<<m_nLastRound1<<':'
-			<<"坦克"<<nID<<"移动至坐标("<<pt.x<<','<<pt.y<<")处."<<endl;
+			<<"坦克 "<<nID<<" 移动至 ("<<pt.x<<','<<pt.y<<") 处."<<endl;
 	}
 	else
 	{
 		(*fcomment).fill(' ');
-		(*fcomment)<<setw(13)<<' '
-			<<"坦克"<<nID<<"移动至坐标("<<pt.x<<','<<pt.y<<")处."<<endl;
+		(*fcomment)<<setw(10)<<' '
+			<<"坦克 "<<nID<<" 移动至 ("<<pt.x<<','<<pt.y<<") 处."<<endl;
 	}
 	return;
 }
@@ -768,41 +926,112 @@ void GameCore::WriteComment_Attack(int atker,int target,int damage,int skill,int
 	if(m_nLastRound1 != round)
 	{
 		m_nLastRound1 = round;
+		if(round != 1)
+			(*fcomment)<<endl;
 		(*fcomment).fill('0');
 		(*fcomment)<<"Round "<<setw(3)<<m_nLastRound1<<':';
 		if(skill)
 		{
-			(*fcomment)<<"坦克"<<atker<<"使坦克"<<target<<"瘫痪，并造成了"
-			<<damage<<"点伤害.";
+			(*fcomment)<<"坦克 "<<atker<<" 使坦克 "<<target<<" 瘫痪，并造成了 "
+			<<damage<<" 点伤害.";
 			if(dead)
-				(*fcomment)<<"坦克"<<target<<"阵亡了."<<endl;
+				(*fcomment)<<"坦克 "<<target<<" 阵亡了."<<endl;
+			else
+				(*fcomment)<<endl;
 		}
 		else
 		{
-			(*fcomment)<<"坦克"<<atker<<"对"<<(target == 10 ? "基地" : "坦克")<<target
-				<<"造成了"<<damage<<"点伤害.";
+			(*fcomment)<<"坦克 "<<atker<<" 对"<<(target == 10 ? "敌方基地" : "坦克 ");
+			if(target != 10)
+				(*fcomment)<<target<<' ';
+			(*fcomment)<<"造成了 "<<damage<<" 点伤害.";
 			if(dead)
-				(*fcomment)<<(target == 10 ? "基地" : "坦克")<<target<<(target == 10 ? "破坏" : "阵亡")<<"了."<<endl;
+				(*fcomment)<<(target == 10 ? "敌方基地" : "坦克")<<(target == 10 ? "破坏" : " 阵亡")<<"了."<<endl;
+			else
+				(*fcomment)<<endl;
 		}
 	}
 	else
 	{
 		(*fcomment).fill(' ');
-		(*fcomment)<<setw(13)<<' ';
+		(*fcomment)<<setw(10)<<' ';
 		if(skill)
 		{
-			(*fcomment)<<"坦克"<<atker<<"使坦克"<<target<<"瘫痪，并造成了"
-			<<damage<<"点伤害.";
+			(*fcomment)<<"坦克 "<<atker<<" 使坦克 "<<target<<" 瘫痪，并造成了 "
+			<<damage<<" 点伤害.";
 			if(dead)
-				(*fcomment)<<"坦克"<<target<<"阵亡了."<<endl;
+				(*fcomment)<<"坦克 "<<target<<" 阵亡了."<<endl;
+			else
+				(*fcomment)<<endl;
 		}
 		else
 		{
-			(*fcomment)<<"坦克"<<atker<<"对"<<(target == 10 ? "基地" : "坦克")<<target
-				<<"造成了"<<damage<<"点伤害.";
+			(*fcomment)<<"坦克 "<<atker<<" 对"<<(target == 10 ? "敌方基地" : "坦克 ");
+			if(target != 10)
+				(*fcomment)<<target<<' ';
+			(*fcomment)<<"造成了 "<<damage<<" 点伤害.";
 			if(dead)
-				(*fcomment)<<(target == 10 ? "基地" : "坦克")<<target<<(target == 10 ? "破坏" : "阵亡")<<"了."<<endl;
+				(*fcomment)<<(target == 10 ? "敌方基地" : "坦克")<<(target == 10 ? "破坏" : "阵亡")<<"了."<<endl;
+			else
+				(*fcomment)<<endl;
 		}
+	}
+	return;
+}
+void GameCore::WriteComment_HeavyAttack(int atker,int target,int damage,int dead)
+{
+	if(m_nLastRound1 != round)
+	{
+		m_nLastRound1 = round;
+		if(round != 1)
+			(*fcomment)<<endl;
+		(*fcomment).fill('0');
+		(*fcomment)<<"Round "<<setw(3)<<m_nLastRound1<<':';
+		/*if(skill)
+		{
+		(*fcomment)<<"坦克 "<<atker<<" 使坦克 "<<target<<" 瘫痪，并造成了 "
+		<<damage<<" 点伤害.";
+		if(dead)
+		(*fcomment)<<"坦克 "<<target<<" 阵亡了."<<endl;
+		else
+		(*fcomment)<<endl;
+		}
+		else
+		{*/
+		(*fcomment)<<"重坦 "<<atker<<" 对"<<(target == 10 ? "敌方基地" : "坦克 ");
+		if(target != 10)
+			(*fcomment)<<target<<' ';
+		(*fcomment)<<"造成了 "<<damage<<" 点碾压伤害.";
+		if(dead)
+			(*fcomment)<<(target == 10 ? "敌方基地" : "坦克")<<(target == 10 ? "破坏" : " 阵亡")<<"了."<<endl;
+		else
+			(*fcomment)<<endl;
+		//}
+	}
+	else
+	{
+		(*fcomment).fill(' ');
+		(*fcomment)<<setw(10)<<' ';
+		/*if(skill)
+		{
+		(*fcomment)<<"坦克 "<<atker<<" 使坦克 "<<target<<" 瘫痪，并造成了 "
+		<<damage<<" 点伤害.";
+		if(dead)
+		(*fcomment)<<"坦克 "<<target<<" 阵亡了."<<endl;
+		else
+		(*fcomment)<<endl;
+		}
+		else
+		{*/
+		(*fcomment)<<"重坦 "<<atker<<" 对"<<(target == 10 ? "敌方基地" : "坦克 ");
+		if(target != 10)
+			(*fcomment)<<target<<' ';
+		(*fcomment)<<"造成了 "<<damage<<" 点碾压伤害.";
+		if(dead)
+			(*fcomment)<<(target == 10 ? "敌方基地" : "坦克")<<(target == 10 ? "破坏" : "阵亡")<<"了."<<endl;
+		else
+			(*fcomment)<<endl;
+		//}
 	}
 	return;
 }
@@ -812,6 +1041,8 @@ void GameCore::WriteWarning(int nID,const char* strWarning)
 	if(m_nLastRound2 != round)
 	{
 		m_nLastRound2 = round;
+		if(round != 1)
+			(*fwarning)<<endl;
 		(*fwarning).fill('0');
 		(*fwarning)<<"Round "<<setw(3)<<m_nLastRound2<<':'<<"选手"<<nID<<','<<strWarning<<endl;
 	}
@@ -905,4 +1136,8 @@ void GameCore::ReadInitialMap()
 			(*fin)>>map[i][j];
 	fin->close();
 	delete fin;
+}
+void GameCore::SetError(int nID)
+{
+	nError = nID;
 }

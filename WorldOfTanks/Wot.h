@@ -49,9 +49,9 @@ struct Tank              //坦克信息.
 	int armour;          //护甲.
 	int hp;              //耐久.
 	int ap;              //穿甲值.
+	bool paralyzed;      //是否瘫痪.
 
 	Tank();
-	//Tank(Tank&);
 };
 
 struct GameData          //游戏初始信息.
@@ -107,6 +107,8 @@ struct CmdRpt            //命令反馈.
 /*******************************选手SDK********************************/
 //计算地图两坐标点的距离.
 int dis(Point,Point);
+//判断点坐标是否在地图内.
+bool InMap(int,int);
 //判断先后手.
 bool IsFirsthand();
 //选择坦克阵营.
@@ -119,8 +121,10 @@ void OutputCommand(Command);
 void InputCommandReport(CmdRpt&);
 //读入敌人命及命令反馈.
 void InputEnemyCommand(Command&,CmdRpt&);
-//输出调试信息.
-void OutputDebugInformation(const char*);
+//更新游戏数据.
+void UpdateGameData(bool,GameData&,Command,CmdRpt);
+//重坦特效伤害.
+void HeavyTankSkill(GameData&);
 
 //IO函数重载.
 istream& operator >> (istream&,Faction&);
@@ -174,15 +178,15 @@ period1 = 0: 命令失败.（包括移动1辆失败和移动2辆都失败.）
 		  4: 移动2辆坦克，第2辆成功，第1辆失败。
 		  6: 移动2辆坦克，都成功。
 period2 = 0: 命令无效.（命令涉及到无法操作的坦克或逻辑上不允许的坦克;
-                      这与坦克未命中不同，不会对目标坦克造成伤害.）
+					  这与坦克未命中不同，不会对目标坦克造成伤害.）
 		  1: 命令有效，但攻击坦克目标未命中，造成伤害（若符合坦克特效发动条件，则自动
-		     将特效伤害计算在内）
+			 将特效伤害计算在内）
 		  2: 命令有效，攻击坦克命中目标，造成伤害（若符合坦克特效发动条件，则自动将
-		     特效伤害计算在内）
+			 特效伤害计算在内）
 		  3: 当攻击坦克为反坦克炮时可能会返回此值，表示：命令有效，目标未命中，造成
-		     伤害，但特效使目标坦克瘫痪触发。
+			 伤害，但特效使目标坦克瘫痪触发。
 		  4: 当攻击坦克为反坦克炮时可能会返回此值，表示：命令有效，目标命中，造成伤
-		     害，但特效使目标坦克瘫痪触发。
+			 害，且特效使目标坦克瘫痪触发。
 注：1.period3 的返回值与period1和period2相应命令的返回值相同.
    2.攻击伤害的具体计算公式详见选手手册.
    3.反坦克炮攻击命中率与反坦克炮特效触发概率相互独立.也就是说反坦克炮可能未命中目标，

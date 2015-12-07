@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="map.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
