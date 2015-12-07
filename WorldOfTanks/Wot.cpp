@@ -105,7 +105,9 @@ void ChooseFaction(Faction fac)
 {
 	if(!g_firsthand)
 		IsFirsthand();
-	cout<<fac<<endl;
+	cout<<'{'<<'\n'
+		<<fac<<endl
+		<<'}'<<'\n';
 }
 //读入游戏初始数据.
 void InputGameData(GameData& gdata)
@@ -115,7 +117,9 @@ void InputGameData(GameData& gdata)
 //输出命令.
 void OutputCommand(Command cmd)
 {
-	cout<<cmd;
+	cout<<'{'<<'\n'
+		<<cmd
+		<<'}'<<'\n';
 }
 //读入敌人命及命令反馈.
 void InputCommandReport(CmdRpt& rpt)
