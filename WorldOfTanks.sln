@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WorldOfTanks", "WorldOfTank
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WotAI", "WotAI\WotAI.vcxproj", "{91ED6A91-9BE1-4BE8-A780-302306AD94F7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WotAI2", "WotAI2\WotAI2.vcxproj", "{1147922B-BAFA-4C02-8256-C9652112E299}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{91ED6A91-9BE1-4BE8-A780-302306AD94F7}.Debug|Win32.Build.0 = Debug|Win32
 		{91ED6A91-9BE1-4BE8-A780-302306AD94F7}.Release|Win32.ActiveCfg = Release|Win32
 		{91ED6A91-9BE1-4BE8-A780-302306AD94F7}.Release|Win32.Build.0 = Release|Win32
+		{1147922B-BAFA-4C02-8256-C9652112E299}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1147922B-BAFA-4C02-8256-C9652112E299}.Debug|Win32.Build.0 = Debug|Win32
+		{1147922B-BAFA-4C02-8256-C9652112E299}.Release|Win32.ActiveCfg = Release|Win32
+		{1147922B-BAFA-4C02-8256-C9652112E299}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
