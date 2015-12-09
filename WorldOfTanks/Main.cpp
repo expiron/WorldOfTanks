@@ -86,10 +86,27 @@ ReleaseResource:
 //分析命令行参数，解析生成选手程序的启动命令行.
 void AnalyseCommandLine(int argc,TCHAR* argv[],TCHAR* psz1,TCHAR* psz2,char* name1,char* name2)
 {
-	lstrcpy(psz1,_T("a"));
-	strcpy(name1,"a");
-	lstrcpy(psz2,_T("b"));
-	strcpy(name2,"b");
-	
+	int iLength;
+	if(argc >= 3)
+	{
+		lstrcpy(psz1,argv[1]);
+		iLength = WideCharToMultiByte(CP_ACP,0,psz1,-1,NULL,0,NULL,NULL);
+		WideCharToMultiByte(CP_ACP,0,psz1,-1,name1,iLength,NULL,NULL);
+
+		lstrcpy(psz2,argv[2]);
+		iLength = WideCharToMultiByte(CP_ACP,0,psz2,-1,NULL,0,NULL,NULL);
+		WideCharToMultiByte(CP_ACP,0,psz2,-1,name2,iLength,NULL,NULL);
+
+		lstrcat(psz1,_T(" -m"));
+		lstrcat(psz2,_T(" -m"));
+	}
+	else
+	{
+		lstrcpy(psz1,_T("a"));
+		strcpy(name1,"a");
+		lstrcpy(psz2,_T("b"));
+		strcpy(name2,"b");
+	}
+
 	return;
 }
