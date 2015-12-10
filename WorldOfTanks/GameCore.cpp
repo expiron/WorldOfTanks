@@ -36,7 +36,7 @@ GameCore::~GameCore()
 		delete fwarning;
 	}
 }
-bool GameCore::SetPlayer(Player* pA,Player* pB)
+bool GameCore::SetPlayer(PlayerApp* pA,PlayerApp* pB)
 {
 	if(pA != NULL && pB != NULL)
 	{
@@ -98,6 +98,7 @@ bool GameCore::SetPlayerName(const char* pstr1,const char* pstr2)
 }
 bool GameCore::Initialize()
 {
+	
 	if(!m_pPlayerA || !m_pPlayerB)
 	{
 		m_nErrorCode = 1;    //Player pointer is NULL!
@@ -789,7 +790,7 @@ bool GameCore::IsGameOver()
 		return true;*/
 	return false;
 }
-bool GameCore::ReportResult()
+int GameCore::ReportResult()
 {
 	cout<<"Round = "<<round<<endl;
 	cout<<"PlayerA.score = "<<scoreA<<"  PlayerA.value = "<<valueA<<endl;
@@ -803,7 +804,7 @@ bool GameCore::ReportResult()
 	strcat(tmp,"_result.txt");
 	ofstream* fresult = new ofstream(tmp);
 	if(!fresult)
-		return false;
+		return 0;
 
 	(*fresult)<<"Round = "<<round<<endl;
 	(*fresult)<<"PlayerA.score = "<<scoreA<<"  PlayerA.value = "<<valueA<<endl;
@@ -815,6 +816,7 @@ bool GameCore::ReportResult()
 			WriteVideo_End(round,1);
 			cout<<"PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
+			return 1;
 		}
 		else
 			if(valueB > valueA)
@@ -822,6 +824,7 @@ bool GameCore::ReportResult()
 				WriteVideo_End(round,2);
 				cout<<"PlayerB wins the game!"<<endl;
 				(*fresult)<<"PlayerB wins the game!"<<endl;
+				return 2;
 			}
 			else
 			{
@@ -829,27 +832,8 @@ bool GameCore::ReportResult()
 
 				cout<<"It ends in a draw."<<endl;
 				(*fresult)<<"It ends in a draw."<<endl;
+				return 3;
 			}
-		/*if(scoreA >= 5)
-		{
-			WriteVideo_End(round,1);
-			cout<<"PlayerA wins the game!"<<endl;
-			(*fresult)<<"PlayerA wins the game!"<<endl;
-		}
-		else
-			if(scoreB >= 5)
-			{
-				WriteVideo_End(round,2);
-				cout<<"PlayerB wins the game!"<<endl;
-				(*fresult)<<"PlayerB wins the game!"<<endl;
-			}
-			else
-			{
-				WriteVideo_End(round,0);
-
-				cout<<"It ends in a draw."<<endl;
-				(*fresult)<<"It ends in a draw."<<endl;
-			}*/
 	else
 	{
 		if(nError == 1)
@@ -857,16 +841,18 @@ bool GameCore::ReportResult()
 			WriteVideo_End(round,2);
 			cout<<"PlayerB wins the game!"<<endl;
 			(*fresult)<<"PlayerB wins the game!"<<endl;
+			return 2;
 		}
 		if(nError == 2)
 		{
 			WriteVideo_End(round,1);
 			cout<<"PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
+			return 1;
 		}
 	}
 
-	return true;
+	return 0;
 }
 bool GameCore::IsInMap(int x,int y)
 {

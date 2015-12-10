@@ -1,11 +1,11 @@
 ﻿#include "stdafx.h"
 
-#include "Player.h"
+#include "PlayerApp.h"
 
 using namespace std;
 
 //构造函数.
-Player::Player()
+PlayerApp::PlayerApp()
 {
 	//匿名管道句柄初始化.
 	hInputRead = NULL;
@@ -25,7 +25,7 @@ Player::Player()
 	flog = NULL;
 }
 //析构函数.
-Player::~Player()
+PlayerApp::~PlayerApp()
 {
 	TerminateProcess(pi.hProcess,0);
 	if(fdebug)
@@ -37,7 +37,7 @@ Player::~Player()
 	delete []pszOutput;
 }
 //初始化函数.
-bool Player::Initialize(LPWSTR lpCommandLine)
+bool PlayerApp::Initialize(LPWSTR lpCommandLine)
 {
 	//定义安全描述符
 	SECURITY_ATTRIBUTES sa;
@@ -75,7 +75,7 @@ bool Player::Initialize(LPWSTR lpCommandLine)
 	}
 	return true;
 }
-bool Player::SetName(const char* pStr)
+bool PlayerApp::SetName(const char* pStr)
 {
 	strcpy(strName,pStr);
 	char tmp[128];
@@ -98,7 +98,7 @@ bool Player::SetName(const char* pStr)
 
 	return true;
 }
-bool Player::WriteFirsthand(bool initiative)
+bool PlayerApp::WriteFirsthand(bool initiative)
 {
 	firsthand = initiative;
 	DWORD dwWrite;
@@ -118,7 +118,7 @@ bool Player::WriteFirsthand(bool initiative)
 		return false;
 
 }
-bool Player::ChooseFaction(Faction& fac)
+bool PlayerApp::ChooseFaction(Faction& fac)
 {
 	if(!InputStringsPreProcess())
 		return false;
@@ -133,7 +133,7 @@ bool Player::ChooseFaction(Faction& fac)
 
 	return true;
 }
-bool Player::WriteGameData(GameData& gdata)
+bool PlayerApp::WriteGameData(GameData& gdata)
 {
 	DWORD dwWrite;
 	ZeroMemory(pszInput,2048);
@@ -150,7 +150,7 @@ bool Player::WriteGameData(GameData& gdata)
 	else                                 //写入失败.
 		return false;
 }
-bool Player::WriteLastCommand(Command& cmd,CmdRpt& rpt)
+bool PlayerApp::WriteLastCommand(Command& cmd,CmdRpt& rpt)
 {
 	DWORD dwWrite;
 	ZeroMemory(pszInput,2048);
@@ -167,7 +167,7 @@ bool Player::WriteLastCommand(Command& cmd,CmdRpt& rpt)
 	else                                 //写入失败.
 		return false;
 }
-bool Player::ReadCommand(Command& cmd)
+bool PlayerApp::ReadCommand(Command& cmd)
 {
 	if(!InputStringsPreProcess())
 		return false;
@@ -177,7 +177,7 @@ bool Player::ReadCommand(Command& cmd)
 
 	return true;
 }
-bool Player::WriteCommandReport(CmdRpt& rpt)
+bool PlayerApp::WriteCommandReport(CmdRpt& rpt)
 {
 	DWORD dwWrite;
 	ZeroMemory(pszInput,2048);
@@ -194,7 +194,7 @@ bool Player::WriteCommandReport(CmdRpt& rpt)
 	else                                 //写入失败.
 		return false;
 }
-bool Player::InputStringsPreProcess()
+bool PlayerApp::InputStringsPreProcess()
 {
 	DWORD dwRead = 0;
 	Sleep(25);    //Timeout

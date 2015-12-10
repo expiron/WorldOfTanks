@@ -15,7 +15,7 @@ CWinApp theApp;
 
 using namespace std;
 //主程序.
-void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[]);
+void Main(int argc,TCHAR* argv[],TCHAR* envp[]);
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
@@ -35,7 +35,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 		else
 		{
 			// TODO: 在此处为应用程序的行为编写代码。
-			JudgeMain(argc,argv,envp);
+			Main(argc,argv,envp);
 		}
 	}
 	else

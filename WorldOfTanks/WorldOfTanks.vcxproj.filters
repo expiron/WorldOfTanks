@@ -19,6 +19,9 @@
     <Text Include="map.txt">
       <Filter>资源文件</Filter>
     </Text>
+    <Text Include="Players.list">
+      <Filter>资源文件</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -36,10 +39,10 @@
     <ClInclude Include="GameCore.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
+    <ClInclude Include="Wot.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Wot.h">
+    <ClInclude Include="PlayerApp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,10 +59,10 @@
     <ClCompile Include="Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
+    <ClCompile Include="Wot.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Wot.cpp">
+    <ClCompile Include="PlayerApp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

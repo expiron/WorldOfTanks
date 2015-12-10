@@ -2,13 +2,13 @@
 
 #include "stdafx.h"
 
-class Player
+class PlayerApp
 {
 	friend class GameCore;
 
 public:
-	Player();
-	~Player();
+	PlayerApp();
+	~PlayerApp();
 	//初始化及选手程序启动.
 	bool Initialize(LPWSTR);
 	//设置文件名.

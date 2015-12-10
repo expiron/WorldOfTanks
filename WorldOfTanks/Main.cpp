@@ -1,17 +1,153 @@
 ﻿#include "stdafx.h"
 
+#include <cmath>
+#include <algorithm>
+
 #include "WorldOfTanks.h"
 
-#include "Player.h"
+#include "PlayerApp.h"
 #include "GameCore.h"
 
 using namespace std;
 
-void AnalyseCommandLine(int,TCHAR**,TCHAR*,TCHAR*,char*,char*);
-
-void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
+struct Player    //竞赛Player结构定义.
 {
-	Player playerA,playerB;
+	char pszName[32];    //名称.
+	double score;        //rank分.
+};
+
+//命令行解析.
+void AnalyseCommandLine(int,TCHAR**,TCHAR*,TCHAR*,char*,char*);
+//初始化比赛.
+bool InitializeMatch(Player*,int&);
+//选手循环赛.
+void StartMatch(Player*,int,TCHAR**);
+//显示Rank分.
+void ReportRank(Player*,int);
+//比赛主函数.
+int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int);
+
+void Main(int argc,TCHAR* argv[],TCHAR* envp[])
+{
+	//Read Players.
+	int nPlayers = 0;
+	Player plist[32];
+	if(!InitializeMatch(plist,nPlayers))
+	{
+		cerr<<"Error in reading player list!"<<endl;
+		return;
+	}
+	/*cout<<"nPlayers = "<<nPlayers<<endl;
+	for(int i = 0;i < nPlayers;i++)
+	{
+		cout<<plist[i].pszName<<endl;
+	}*/
+	StartMatch(plist,nPlayers,envp);    //开始比赛.
+	ReportRank(plist,nPlayers);
+
+	system("pause");
+	return;
+}
+//选手循环赛.
+void StartMatch(Player* p,int n,TCHAR* envp[])
+{
+	TCHAR* argv[3];
+	int nRet;
+	double scoreA,scoreB;
+	double ea,eb;
+	for(int i = 0;i < 3;i++)
+		argv[i] = new TCHAR[32];
+	ZeroMemory(argv[0],32);
+	for(int i = 0;i < n;i++)
+		for(int j = 0;j < n;j++)
+		{
+			if(i == j)
+				continue;
+			ZeroMemory(argv[1],32);
+			ZeroMemory(argv[2],32);
+			MultiByteToWideChar(CP_ACP,0,p[i].pszName,-1,argv[1],32);
+			MultiByteToWideChar(CP_ACP,0,p[j].pszName,-1,argv[2],32);
+			ReportRank(p,n);
+			nRet = JudgeMain(3,argv,envp,n);
+			switch(nRet)
+			{
+			case 0:
+				break;
+			case 1:
+				scoreA = p[i].score;
+				scoreB = p[j].score;
+				ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+				eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+				scoreA = scoreA + 32.0 * (1.0 - ea);
+				scoreB = scoreB + 32.0 * (0 - eb);
+				p[i].score = scoreA;
+				p[j].score = scoreB;
+				break;
+			case 2:
+				scoreA = p[i].score;
+				scoreB = p[j].score;
+				ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+				eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+				scoreA = scoreA + 32.0 * (0 - ea);
+				scoreB = scoreB + 32.0 * (1.0 - eb);
+				p[i].score = scoreA;
+				p[j].score = scoreB;
+				break;
+			case 3:
+				scoreA = p[i].score;
+				scoreB = p[j].score;
+				ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+				eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+				scoreA = scoreA + 32.0 * (0.5 - ea);
+				scoreB = scoreB + 32.0 * (0.5 - eb);
+				p[i].score = scoreA;
+				p[j].score = scoreB;
+				break;
+			}
+			system("cls");
+		}
+}
+//显示Rank分.
+bool ScoreComp(Player a,Player b)
+{
+	if(a.score > b.score)
+		return true;
+	else
+		return false;
+}
+void ReportRank(Player* p,int n)
+{
+
+	sort(p,p + n,ScoreComp);
+	for(int i = 0;i < n;i++)
+		cout<<setw(8)<<p[i].pszName<<' '<<setprecision(2)<<std::fixed<<p[i].score<<endl;
+}
+//读取选手清单.
+bool InitializeMatch(Player* p,int& n)
+{
+	//Read Players.
+	ifstream* flist = new ifstream("Players.list");
+	if(flist->fail())
+		return false;
+
+	char tmp[64];
+	n = 0;
+	while(!flist->eof())
+	{
+		ZeroMemory(tmp,64);
+		flist->getline(tmp,64);
+		strcpy(p[n].pszName,tmp);
+		p[n++].score = 1500;
+	}
+	n--;
+
+	flist->close();
+	delete flist;
+	return true;
+}
+int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
+{
+	PlayerApp playerA,playerB;
 	GameCore gameCore;
 	TCHAR* pszCommand1 = new TCHAR[1024];
 	TCHAR* pszCommand2 = new TCHAR[1024];
@@ -23,11 +159,14 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD dwSize = 0;
 	COORD coo;
-	coo.Y = 2;
+	coo.Y = 3 + n;
 
 	AnalyseCommandLine(argc,argv,pszCommand1,pszCommand2,pszPlayerNameA,pszPlayerNameB);
 	/*AfxMessageBox(pszCommand1);
 	AfxMessageBox(pszCommand2);*/
+	cout<<pszPlayerNameA<<" vs "<<pszPlayerNameB<<endl;
+
+	//return 0;
 
 	cout<<"Initializing...";
 	if(!playerA.Initialize(pszCommand1) || !playerB.Initialize(pszCommand2))
@@ -75,13 +214,15 @@ void JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[])
 	//Report
 ReportResult:
 	cout<<"The report:"<<endl;
-	gameCore.ReportResult();
+	return gameCore.ReportResult();
 	::Sleep(1000);
 	//Cleaning.
 ReleaseResource:
 	delete []pszCommand1;
 	delete []pszCommand2;
-	return;
+	delete []pszPlayerNameA;
+	delete []pszPlayerNameB;
+	return 0;
 }
 //分析命令行参数，解析生成选手程序的启动命令行.
 void AnalyseCommandLine(int argc,TCHAR* argv[],TCHAR* psz1,TCHAR* psz2,char* name1,char* name2)

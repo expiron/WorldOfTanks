@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 
-#include "Player.h"
+#include "PlayerApp.h"
 
 class GameCore
 {
@@ -10,7 +10,7 @@ public:
 	GameCore();
 	~GameCore();
 	//传递选手Player对象指针.
-	bool SetPlayer(Player*,Player*);
+	bool SetPlayer(PlayerApp*,PlayerApp*);
 	//设置选手名称.
 	bool SetPlayerName(const char*,const char*);
 	//初始化选手程序状态.
@@ -26,7 +26,7 @@ public:
 	//判断游戏是否终止.
 	bool IsGameOver();
 	//输出游戏结果.
-	bool ReportResult();
+	int ReportResult();
 	void SetError(int);
 protected:
 	//初始化坦克数据.
@@ -90,8 +90,8 @@ private:
 	//种子散列值.
 	int      hseed;
 	//选手对象.
-	Player*  m_pPlayerA;
-	Player*  m_pPlayerB;
+	PlayerApp*  m_pPlayerA;
+	PlayerApp*  m_pPlayerB;
 	//选手名称.
 	char     strNameA[128];
 	char     strNameB[128];
