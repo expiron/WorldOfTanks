@@ -4,6 +4,20 @@
 #include <strstream>
 using namespace std;
 
+/********************************符号定义*******************************/
+#define myHeavy                         (int)(g_firsthand == 1 ? 0 : 5)
+#define myLight                         (int)(g_firsthand == 1 ? 1 : 6)
+#define myMiddle                        (int)(g_firsthand == 1 ? 2 : 7)
+#define mySlfPro                        (int)(g_firsthand == 1 ? 3 : 8)
+#define myAnti                          (int)(g_firsthand == 1 ? 4 : 9)
+#define enemyHeavy                      (int)(g_firsthand == 1 ? 5 : 0)
+#define enemyLight                      (int)(g_firsthand == 1 ? 6 : 1)
+#define enemyMiddle                     (int)(g_firsthand == 1 ? 7 : 2)
+#define enemySlfPro                     (int)(g_firsthand == 1 ? 8 : 3)
+#define enemyAnti                       (int)(g_firsthand == 1 ? 9 : 4)
+#define IDToSubscript(id)               (int)(id > 4 ? id - 5 : id)
+#define SubscriptToID(firsthand,type)   (int)(firsthand == true ? type - 1 : type + 4)
+
 /*******************************结构体定义******************************/
 enum Faction             //坦克阵营变量.
 {

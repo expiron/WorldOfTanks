@@ -142,20 +142,20 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 0: break;    //命令失败.
 
 		case 1:{          //移动1辆坦克成功.
-			int i = cmd.moveCommand[0].nID;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
 			gdata.myTank[i].pt = cmd.moveCommand[0].pt;} break;
 
 		case 2:{          //第1辆成功,第2辆失败.
-			int i = cmd.moveCommand[0].nID;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
 			gdata.myTank[i].pt = cmd.moveCommand[0].pt;} break;
 
 		case 4:{          //第2辆成功,第1辆失败.
-			int i = cmd.moveCommand[1].nID;
+			int i = IDToSubscript(cmd.moveCommand[1].nID);
 			gdata.myTank[i].pt = cmd.moveCommand[1].pt;} break;
 
 		case 6:{          //移动2辆坦克都成功.
-			int i = cmd.moveCommand[0].nID;
-			int j = cmd.moveCommand[1].nID;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
+			int j = IDToSubscript(cmd.moveCommand[1].nID);
 			gdata.myTank[i].pt = cmd.moveCommand[0].pt;
 			gdata.myTank[j].pt = cmd.moveCommand[1].pt;} break;
 		}
@@ -170,18 +170,18 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			int j = cmd.atkCommand[0].nID_Target;
 			if(j != 10)
 			{
-				if((i==1 && j==8) || (i==2 && j==5))
-					gdata.enemyTank[j-5].hp -= 2;    //特效伤害.
+				if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+					gdata.enemyTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
 				else
-					gdata.enemyTank[j-5].hp --;    //普通未命中伤害.
+					gdata.enemyTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
 			}
 			else
 				gdata.enemyBaseHP--;
 
-			if(gdata.enemyTank[j-5].hp < 0)
+			if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-				gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+				gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			if(gdata.enemyBaseHP < 0)
 				gdata.enemyBaseHP = 0;    //基地跪了.
@@ -190,17 +190,17 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 2:{    //命中.
 			int i = cmd.atkCommand[0].nID_Attacker;
 			int j = cmd.atkCommand[0].nID_Target;
-			if((i==1 && j==8) || (i==2 && j==5))
-				gdata.enemyTank[j-5].hp -= 1;    //特效伤害
+			if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+				gdata.enemyTank[IDToSubscript(j)].hp -= 1;    //特效伤害
 			if(j != 10)
-				gdata.enemyTank[j-5].hp -= gdata.myTank[i].atk;    //炮击伤害
+				gdata.enemyTank[IDToSubscript(j)].hp -= gdata.myTank[IDToSubscript(i)].atk;    //炮击伤害
 			else
-				gdata.enemyBaseHP -= gdata.myTank[i].atk;    //攻击基地
+				gdata.enemyBaseHP -= gdata.myTank[IDToSubscript(i)].atk;    //攻击基地
 
-			if(gdata.enemyTank[j-5].hp < 0)
+			if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-				gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+				gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			if(gdata.enemyBaseHP < 0)
 				gdata.enemyBaseHP = 0;    //基地跪了.
@@ -209,28 +209,28 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 3:{    //触发瘫痪特效.
 			int i = cmd.atkCommand[0].nID_Attacker;
 			int j = cmd.atkCommand[0].nID_Target;
-			if((i==1 && j==8) || (i==2 && j==5))
-				gdata.enemyTank[j-5].hp -= 2;    //特效伤害.
-			else
-				gdata.enemyTank[j-5].hp --;    //普通未命中伤害.
-			gdata.enemyTank[j-5].paralyzed = true;    //瘫痪坦克.
+			/*if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+				gdata.enemyTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
+			else*/
+			gdata.enemyTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
+			gdata.enemyTank[IDToSubscript(j)].paralyzed = true;    //瘫痪坦克.
 
-			if(gdata.enemyTank[j-5].hp < 0)
+			if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-				gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+				gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			   } break;
 
 		case 4:{    //命中且触发瘫痪特效.
 			int j = cmd.atkCommand[0].nID_Target;
-			gdata.enemyTank[j-5].hp -= gdata.myTank[4].atk;    //造成伤害.
-			gdata.enemyTank[j-5].paralyzed = true;
+			gdata.enemyTank[IDToSubscript(j)].hp -= gdata.myTank[myAnti].atk;    //造成伤害.
+			gdata.enemyTank[IDToSubscript(j)].paralyzed = true;
 
-			if(gdata.enemyTank[j-5].hp < 0)
+			if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-				gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+				gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			   };break;
 		}
@@ -243,7 +243,7 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 0: break;    //命令失败.
 
 			case 1:{          //移动1辆坦克成功.
-				int i = cmd.moveCommand[cmd.nMove].nID;
+				int i = IDToSubscript(cmd.moveCommand[cmd.nMove].nID);
 				gdata.myTank[i].pt = cmd.moveCommand[cmd.nMove].pt;} break;
 			}
 		}
@@ -258,18 +258,18 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 				int j = cmd.atkCommand[1].nID_Target;
 				if(j != 10)
 				{
-					if((i==1 && j==8) || (i==2 && j==5))
-						gdata.enemyTank[j-5].hp -= 2;    //特效伤害.
+					if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+						gdata.enemyTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
 					else
-						gdata.enemyTank[j-5].hp --;    //普通未命中伤害.
+						gdata.enemyTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
 				}
 				else
 					gdata.enemyBaseHP--;
 
-				if(gdata.enemyTank[j-5].hp < 0)
+				if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-					gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+					gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				if(gdata.enemyBaseHP < 0)
 					gdata.enemyBaseHP = 0;    //基地跪了.
@@ -278,17 +278,17 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 2:{    //命中.
 				int i = cmd.atkCommand[1].nID_Attacker;
 				int j = cmd.atkCommand[1].nID_Target;
-				if((i==1 && j==8) || (i==2 && j==5))
-					gdata.enemyTank[j-5].hp -= 1;    //特效伤害
+				if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+					gdata.enemyTank[IDToSubscript(j)].hp -= 1;    //特效伤害
 				if(j != 10)
-					gdata.enemyTank[j-5].hp -= gdata.myTank[i].atk;    //炮击伤害
+					gdata.enemyTank[IDToSubscript(j)].hp -= gdata.myTank[IDToSubscript(i)].atk;    //炮击伤害
 				else
-					gdata.enemyBaseHP -= gdata.myTank[i].atk;    //攻击基地
+					gdata.enemyBaseHP -= gdata.myTank[IDToSubscript(i)].atk;    //攻击基地
 
-				if(gdata.enemyTank[j-5].hp < 0)
+				if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-					gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+					gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				if(gdata.enemyBaseHP < 0)
 					gdata.enemyBaseHP = 0;    //基地跪了.
@@ -297,28 +297,28 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 3:{    //触发瘫痪特效.
 				int i = cmd.atkCommand[1].nID_Attacker;
 				int j = cmd.atkCommand[1].nID_Target;
-				if((i==1 && j==8) || (i==2 && j==5))
-					gdata.enemyTank[j-5].hp -= 2;    //特效伤害.
-				else
-					gdata.enemyTank[j-5].hp --;    //普通未命中伤害.
-				gdata.enemyTank[j-5].paralyzed = true;    //瘫痪坦克.
+				/*if((i == myLight && j == enemySlfPro) || (i == myMiddle && j == enemyHeavy))
+					gdata.enemyTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
+				else*/
+				gdata.enemyTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
+				gdata.enemyTank[IDToSubscript(j)].paralyzed = true;    //瘫痪坦克.
 
-				if(gdata.enemyTank[j-5].hp < 0)
+				if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-					gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+					gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				   } break;
 
 			case 4:{    //命中且触发瘫痪特效.
 				int j = cmd.atkCommand[1].nID_Target;
-				gdata.enemyTank[j-5].hp -= gdata.myTank[4].atk;    //造成伤害.
-				gdata.enemyTank[j-5].paralyzed = true;
+				gdata.enemyTank[IDToSubscript(j)].hp -= gdata.myTank[myAnti].atk;    //造成伤害.
+				gdata.enemyTank[IDToSubscript(j)].paralyzed = true;
 
-				if(gdata.enemyTank[j-5].hp < 0)
+				if(gdata.enemyTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.enemyTank[j-5].hp = 0;    //坦克跪了.
-					gdata.enemyTank[j-5].pt = Point(-6,-6);    //位置归零.
+					gdata.enemyTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.enemyTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				   };break;
 			}
@@ -335,20 +335,20 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 0: break;    //命令失败.
 
 		case 1:{          //移动1辆坦克成功.
-			int i = cmd.moveCommand[0].nID - 5;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
 			gdata.enemyTank[i].pt = cmd.moveCommand[0].pt;} break;
 
 		case 2:{          //第1辆成功,第2辆失败.
-			int i = cmd.moveCommand[0].nID - 5;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
 			gdata.enemyTank[i].pt = cmd.moveCommand[0].pt;} break;
 
 		case 4:{          //第2辆成功,第1辆失败.
-			int i = cmd.moveCommand[1].nID - 5;
+			int i = IDToSubscript(cmd.moveCommand[1].nID);
 			gdata.enemyTank[i].pt = cmd.moveCommand[1].pt;} break;
 
 		case 6:{          //移动2辆坦克都成功.
-			int i = cmd.moveCommand[0].nID - 5;
-			int j = cmd.moveCommand[1].nID - 5;
+			int i = IDToSubscript(cmd.moveCommand[0].nID);
+			int j = IDToSubscript(cmd.moveCommand[1].nID);
 			gdata.enemyTank[i].pt = cmd.moveCommand[0].pt;
 			gdata.enemyTank[j].pt = cmd.moveCommand[1].pt;} break;
 		}
@@ -363,18 +363,18 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			int j = cmd.atkCommand[0].nID_Target;
 			if(j != 10)
 			{
-				if((i==6 && j==3) || (i==7 && j==0))
-					gdata.myTank[j].hp -= 2;    //特效伤害.
+				if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+					gdata.myTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
 				else
-					gdata.myTank[j].hp --;    //普通未命中伤害.
+					gdata.myTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
 			}
 			else
 				gdata.myBaseHP--;
 
-			if(gdata.myTank[j].hp < 0)
+			if(gdata.myTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.myTank[j].hp = 0;    //坦克跪了.
-				gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+				gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			if(gdata.myBaseHP < 0)
 				gdata.myBaseHP = 0;    //基地跪了.
@@ -383,17 +383,17 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 2:{    //命中.
 			int i = cmd.atkCommand[0].nID_Attacker;
 			int j = cmd.atkCommand[0].nID_Target;
-			if((i==6 && j==3) || (i==7 && j==0))
-				gdata.myTank[j].hp -= 1;    //特效伤害
+			if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+				gdata.myTank[IDToSubscript(j)].hp -= 1;    //特效伤害
 			if(j != 10)
-				gdata.myTank[j].hp -= gdata.enemyTank[i-5].atk;    //炮击伤害
+				gdata.myTank[IDToSubscript(j)].hp -= gdata.enemyTank[IDToSubscript(i)].atk;    //炮击伤害
 			else
-				gdata.myBaseHP -= gdata.enemyTank[i-5].atk;    //攻击基地
+				gdata.myBaseHP -= gdata.enemyTank[IDToSubscript(i)].atk;    //攻击基地
 
-			if(gdata.myTank[j].hp < 0)
+			if(gdata.myTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.myTank[j].hp = 0;    //坦克跪了.
-				gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+				gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			if(gdata.myBaseHP < 0)
 				gdata.myBaseHP = 0;    //基地跪了.
@@ -402,28 +402,28 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 		case 3:{    //触发瘫痪特效.
 			int i = cmd.atkCommand[0].nID_Attacker;
 			int j = cmd.atkCommand[0].nID_Target;
-			if((i==6 && j==3) || (i==7 && j==0))
-				gdata.myTank[j].hp -= 2;    //特效伤害.
-			else
-				gdata.myTank[j].hp --;    //普通未命中伤害.
-			gdata.myTank[j].paralyzed = true;    //瘫痪坦克.
+			/*if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+				gdata.myTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
+			else*/
+			gdata.myTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
+			gdata.myTank[IDToSubscript(j)].paralyzed = true;    //瘫痪坦克.
 
-			if(gdata.myTank[j].hp < 0)
+			if(gdata.myTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.myTank[j].hp = 0;    //坦克跪了.
-				gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+				gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			   } break;
 
 		case 4:{    //命中且触发瘫痪特效.
 			int j = cmd.atkCommand[0].nID_Target;
-			gdata.myTank[j].hp -= gdata.enemyTank[4].atk;    //造成伤害.
-			gdata.myTank[j].paralyzed = true;
+			gdata.myTank[IDToSubscript(j)].hp -= gdata.enemyTank[enemyAnti].atk;    //造成伤害.
+			gdata.myTank[IDToSubscript(j)].paralyzed = true;
 
-			if(gdata.myTank[j].hp < 0)
+			if(gdata.myTank[IDToSubscript(j)].hp < 0)
 			{
-				gdata.myTank[j].hp = 0;    //坦克跪了.
-				gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+				gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+				gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 			}
 			   } break;
 		}
@@ -436,7 +436,7 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 0: break;    //命令失败.
 
 			case 1:{          //移动1辆坦克成功.
-				int i = cmd.moveCommand[cmd.nMove].nID;
+				int i = IDToSubscript(cmd.moveCommand[cmd.nMove].nID);
 				gdata.enemyTank[i].pt = cmd.moveCommand[cmd.nMove].pt;} break;
 			}
 		}
@@ -451,18 +451,18 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 				int j = cmd.atkCommand[1].nID_Target;
 				if(j != 10)
 				{
-					if((i==6 && j==3) || (i==7 && j==0))
-						gdata.myTank[j].hp -= 2;    //特效伤害.
+					if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+						gdata.myTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
 					else
-						gdata.myTank[j].hp --;    //普通未命中伤害.
+						gdata.myTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
 				}
 				else
 					gdata.myBaseHP--;
 
-				if(gdata.myTank[j].hp < 0)
+				if(gdata.myTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.myTank[j].hp = 0;    //坦克跪了.
-					gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+					gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				if(gdata.myBaseHP < 0)
 					gdata.myBaseHP = 0;    //基地跪了.
@@ -471,17 +471,17 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 2:{    //命中.
 				int i = cmd.atkCommand[1].nID_Attacker;
 				int j = cmd.atkCommand[1].nID_Target;
-				if((i==6 && j==3) || (i==7 && j==0))
-					gdata.myTank[j].hp -= 1;    //特效伤害
+				if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+					gdata.myTank[IDToSubscript(j)].hp -= 1;    //特效伤害
 				if(j != 10)
-					gdata.myTank[j].hp -= gdata.enemyTank[i-5].atk;    //炮击伤害
+					gdata.myTank[IDToSubscript(j)].hp -= gdata.enemyTank[IDToSubscript(i)].atk;    //炮击伤害
 				else
-					gdata.myBaseHP -= gdata.enemyTank[i-5].atk;    //攻击基地
+					gdata.myBaseHP -= gdata.enemyTank[IDToSubscript(i)].atk;    //攻击基地
 
-				if(gdata.myTank[j].hp < 0)
+				if(gdata.myTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.myTank[j].hp = 0;    //坦克跪了.
-					gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+					gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				if(gdata.myBaseHP < 0)
 					gdata.myBaseHP = 0;    //基地跪了.
@@ -490,28 +490,28 @@ void UpdateGameData(bool myself,GameData& gdata,Command cmd,CmdRpt rpt)
 			case 3:{    //触发瘫痪特效.
 				int i = cmd.atkCommand[1].nID_Attacker;
 				int j = cmd.atkCommand[1].nID_Target;
-				if((i==6 && j==3) || (i==7 && j==0))
-					gdata.myTank[j].hp -= 2;    //特效伤害.
-				else
-					gdata.myTank[j].hp --;    //普通未命中伤害.
-				gdata.myTank[j].paralyzed = true;    //瘫痪坦克.
+				/*if((i == enemyLight && j == mySlfPro) || (i == enemyMiddle && j == myHeavy))
+					gdata.myTank[IDToSubscript(j)].hp -= 2;    //特效伤害.
+				else*/
+				gdata.myTank[IDToSubscript(j)].hp--;    //普通未命中伤害.
+				gdata.myTank[IDToSubscript(j)].paralyzed = true;    //瘫痪坦克.
 
-				if(gdata.myTank[j].hp < 0)
+				if(gdata.myTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.myTank[j].hp = 0;    //坦克跪了.
-					gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+					gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				   } break;
 
 			case 4:{    //命中且触发瘫痪特效.
 				int j = cmd.atkCommand[1].nID_Target;
-				gdata.myTank[j].hp -= gdata.enemyTank[4].atk;    //造成伤害.
-				gdata.myTank[j].paralyzed = true;
+				gdata.myTank[IDToSubscript(j)].hp -= gdata.enemyTank[enemyAnti].atk;    //造成伤害.
+				gdata.myTank[IDToSubscript(j)].paralyzed = true;
 
-				if(gdata.myTank[j].hp < 0)
+				if(gdata.myTank[IDToSubscript(j)].hp < 0)
 				{
-					gdata.myTank[j].hp = 0;    //坦克跪了.
-					gdata.myTank[j].pt = Point(-6,-6);    //位置归零.
+					gdata.myTank[IDToSubscript(j)].hp = 0;    //坦克跪了.
+					gdata.myTank[IDToSubscript(j)].pt = Point(-6,-6);    //位置归零.
 				}
 				   } break;
 			}
