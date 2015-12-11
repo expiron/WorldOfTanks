@@ -16,7 +16,8 @@ using namespace std;
 #define enemySlfPro                     (int)(g_firsthand == 1 ? 8 : 3)
 #define enemyAnti                       (int)(g_firsthand == 1 ? 9 : 4)
 #define IDToSubscript(id)               (int)(id > 4 ? id - 5 : id)
-#define SubscriptToID(firsthand,type)   (int)(firsthand == true ? type - 1 : type + 4)
+#define SubscriptToID(firsthand,s)      (int)(firsthand == true ? type : type + 5)
+#define TypeToID(firsthand,type)        (int)(firsthand == true ? type - 1 : type + 4)
 
 /*******************************结构体定义******************************/
 enum Faction             //坦克阵营变量.
