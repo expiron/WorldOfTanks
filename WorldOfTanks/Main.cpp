@@ -15,13 +15,21 @@ struct Player    //竞赛Player结构定义.
 	char pszName[32];    //名称.
 	double score;        //rank分.
 };
+struct Match
+{
+	Player* pa;
+	Player* pb;
+	int ret[20];
+};
 
 //命令行解析.
 void AnalyseCommandLine(int,TCHAR**,TCHAR*,TCHAR*,char*,char*);
 //初始化比赛.
 bool InitializeMatch(Player*,int&);
+//生成对决名单.
+void GenerateMatchList(Match*,Player*,int,int&);
 //选手循环赛.
-void StartMatch(Player*,int,TCHAR**);
+void StartMatch(int,Match*,Player*,int,int,TCHAR**);
 //显示Rank分.
 void ReportRank(Player*,int);
 //比赛主函数.
@@ -29,37 +37,101 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int);
 
 void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 {
-	//Read Players.
 	int nPlayers = 0;
+	int nMatch = 0;
 	Player plist[32];
+	Match* mlist;
+	//Read Players.
 	if(!InitializeMatch(plist,nPlayers))
 	{
 		cerr<<"Error in reading player list!"<<endl;
 		return;
 	}
-	/*cout<<"nPlayers = "<<nPlayers<<endl;
-	for(int i = 0;i < nPlayers;i++)
-	{
-		cout<<plist[i].pszName<<endl;
-	}*/
-	StartMatch(plist,nPlayers,envp);    //开始比赛.
+	mlist = new Match[nPlayers * (nPlayers - 1)];
+	GenerateMatchList(mlist,plist,nPlayers,nMatch);    //生成对决名单.
+
+	StartMatch(0,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
 	ReportRank(plist,nPlayers);
 
 	system("pause");
 	return;
 }
 //选手循环赛.
-void StartMatch(Player* p,int n,TCHAR* envp[])
+void StartMatch(int round,Match* mlist,Player* p,int n,int nMatch,TCHAR* envp[])
 {
 	TCHAR* argv[3];
 	int nRet;
+	bool* matched;
 	double scoreA,scoreB;
 	double ea,eb;
+	int seed = 2;
 	for(int i = 0;i < 3;i++)
 		argv[i] = new TCHAR[32];
 	ZeroMemory(argv[0],32);
-	for(int i = 0;i < n;i++)
-		for(int j = 0;j < n;j++)
+	matched = new bool[nMatch];
+	ZeroMemory(matched,sizeof(bool)*nMatch);
+	for(int m = 0;m < nMatch;m++)
+	{
+		int k = 0;
+		srand(time(0)/seed);
+		do
+		{
+			k = rand()%nMatch;
+		}while(matched[k]);
+		seed = ((seed+1) > 80 ? 2 : seed + 1);
+		ZeroMemory(argv[1],32);
+		ZeroMemory(argv[2],32);
+		Player* a = mlist[k].pa;
+		Player* b = mlist[k].pb;
+		MultiByteToWideChar(CP_ACP,0,a->pszName,-1,argv[1],32);
+		MultiByteToWideChar(CP_ACP,0,b->pszName,-1,argv[2],32);
+		ReportRank(p,n);
+		nRet = JudgeMain(3,argv,envp,n);
+		switch(nRet)
+		{
+		case 0:
+			break;
+		case 1:
+			scoreA = a->score;
+			scoreB = b->score;
+			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+			scoreA = scoreA + 32.0 * (1.0 - ea);
+			scoreB = scoreB + 32.0 * (0 - eb);
+			a->score = scoreA;
+			b->score = scoreB;
+			break;
+		case 2:
+			scoreA = a->score;
+			scoreB = b->score;
+			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+			scoreA = scoreA + 32.0 * (0 - ea);
+			scoreB = scoreB + 32.0 * (1.0 - eb);
+			a->score = scoreA;
+			b->score = scoreB;
+			break;
+		case 3:
+			scoreA = a->score;
+			scoreB = b->score;
+			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
+			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
+			scoreA = scoreA + 32.0 * (0.5 - ea);
+			scoreB = scoreB + 32.0 * (0.5 - eb);
+			a->score = scoreA;
+			b->score = scoreB;
+			break;
+		}
+		system("cls");
+		mlist[k].ret[round] = nRet;
+		matched[k] = true;
+	}
+
+	return;
+	//for(int i = 0;i < n;i++)
+	//	for(int j = 0;j < n;j++)
+	for(int i = n-1;i >= 0;i--)
+		for(int j = n-1;j >= 0;j--)
 		{
 			if(i == j)
 				continue;
@@ -117,10 +189,24 @@ bool ScoreComp(Player a,Player b)
 }
 void ReportRank(Player* p,int n)
 {
-
 	sort(p,p + n,ScoreComp);
 	for(int i = 0;i < n;i++)
 		cout<<setw(8)<<p[i].pszName<<' '<<setprecision(2)<<std::fixed<<p[i].score<<endl;
+}
+//生成对决名单.
+void GenerateMatchList(Match* mlist,Player* plist,int n,int& nMatch)
+{
+	for(int i = 0;i < n;i++)
+		for(int j = 0;j < n;j++)
+		{
+			if(i == j)
+				continue;
+			(*mlist).pa = plist + i;
+			(*mlist).pb = plist + j;
+			ZeroMemory((*mlist).ret,sizeof(int)*20);
+			mlist++;
+			nMatch++;
+		}
 }
 //读取选手清单.
 bool InitializeMatch(Player* p,int& n)
@@ -210,7 +296,7 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 		}
 		round++;
 	}
-	
+
 	//Report
 ReportResult:
 	cout<<"The report:"<<endl;
