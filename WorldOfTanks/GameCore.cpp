@@ -810,6 +810,7 @@ bool GameCore::ReportResult()
 	(*fresult)<<"PlayerB.score = "<<scoreB<<"  PlayerB.value = "<<valueB<<endl;
 
 	if(round >= 40)
+	{
 		if(valueA > valueB)
 		{
 			WriteVideo_End(round,1);
@@ -830,14 +831,32 @@ bool GameCore::ReportResult()
 				cout<<"It ends in a draw."<<endl;
 				(*fresult)<<"It ends in a draw."<<endl;
 			}
-		/*if(scoreA >= 5)
+		return true;
+	}
+	else
+	{
+		if(nError == 1)
+		{
+			WriteVideo_End(round,2);
+			cout<<"PlayerB wins the game!"<<endl;
+			(*fresult)<<"PlayerB wins the game!"<<endl;
+			return true;
+		}
+		if(nError == 2)
+		{
+			WriteVideo_End(round,1);
+			cout<<"PlayerA wins the game!"<<endl;
+			(*fresult)<<"PlayerA wins the game!"<<endl;
+			return true;
+		}
+		if(valueA > valueB)
 		{
 			WriteVideo_End(round,1);
 			cout<<"PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
 		}
 		else
-			if(scoreB >= 5)
+			if(valueB > valueA)
 			{
 				WriteVideo_End(round,2);
 				cout<<"PlayerB wins the game!"<<endl;
@@ -849,21 +868,8 @@ bool GameCore::ReportResult()
 
 				cout<<"It ends in a draw."<<endl;
 				(*fresult)<<"It ends in a draw."<<endl;
-			}*/
-	else
-	{
-		if(nError == 1)
-		{
-			WriteVideo_End(round,2);
-			cout<<"PlayerB wins the game!"<<endl;
-			(*fresult)<<"PlayerB wins the game!"<<endl;
-		}
-		if(nError == 2)
-		{
-			WriteVideo_End(round,1);
-			cout<<"PlayerA wins the game!"<<endl;
-			(*fresult)<<"PlayerA wins the game!"<<endl;
-		}
+			}
+		return true;
 	}
 
 	return true;
