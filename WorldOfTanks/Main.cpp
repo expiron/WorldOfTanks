@@ -32,6 +32,8 @@ void GenerateMatchList(Match*,Player*,int,int&);
 void StartMatch(int,Match*,Player*,int,int,TCHAR**);
 //显示Rank分.
 void ReportRank(Player*,int);
+//写入CSV文件.
+void WriteMatchCSV(Match*,int,int);
 //比赛主函数.
 int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int);
 
@@ -39,19 +41,24 @@ void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 {
 	int nPlayers = 0;
 	int nMatch = 0;
-	Player plist[32];
+	Player* plist;
 	Match* mlist;
+	plist = new Player[32];
 	//Read Players.
 	if(!InitializeMatch(plist,nPlayers))
 	{
 		cerr<<"Error in reading player list!"<<endl;
 		return;
 	}
+	//Generate Match List.
 	mlist = new Match[nPlayers * (nPlayers - 1)];
 	GenerateMatchList(mlist,plist,nPlayers,nMatch);    //生成对决名单.
-
-	StartMatch(0,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
+	
+	//Match in randomization.
+	for(int i = 0;i < 3;i++)
+		StartMatch(i,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
 	ReportRank(plist,nPlayers);
+	WriteMatchCSV(mlist,nMatch,5);
 
 	system("pause");
 	return;
@@ -192,6 +199,21 @@ void ReportRank(Player* p,int n)
 	sort(p,p + n,ScoreComp);
 	for(int i = 0;i < n;i++)
 		cout<<setw(8)<<p[i].pszName<<' '<<setprecision(2)<<std::fixed<<p[i].score<<endl;
+}
+//写入CSV文件.
+void WriteMatchCSV(Match* mlist,int nMatch,int nRound)
+{
+	ofstream* fout;
+	fout = new ofstream("MatchResult.csv");
+	for(int i = 0;i < nMatch;i++)
+	{
+		(*fout)<<mlist[i].pa->pszName<<" vs "<<mlist[i].pb->pszName<<',';
+		for(int j = 0;j < nRound;j++)
+			(*fout)<<(mlist[i].ret[j] == 1 ? "A胜" : (mlist[i].ret[j] == 2 ? "B胜" : "平局"))<<',';
+		(*fout)<<endl;
+	}
+	fout->close();
+	delete fout;
 }
 //生成对决名单.
 void GenerateMatchList(Match* mlist,Player* plist,int n,int& nMatch)
