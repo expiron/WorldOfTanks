@@ -792,9 +792,9 @@ bool GameCore::IsGameOver()
 }
 int GameCore::ReportResult()
 {
-	cout<<"Round = "<<round<<endl;
-	cout<<"PlayerA.score = "<<scoreA<<"  PlayerA.value = "<<valueA<<endl;
-	cout<<"PlayerB.score = "<<scoreB<<"  PlayerB.value = "<<valueB<<endl;
+	cout<<"  Round = "<<round<<endl;
+	cout<<"  PlayerA.score = "<<scoreA<<"  PlayerA.value = "<<valueA<<endl;
+	cout<<"  PlayerB.score = "<<scoreB<<"  PlayerB.value = "<<valueB<<endl;
 
 	char tmp[256];
 	memset(tmp,0,sizeof(tmp));
@@ -815,7 +815,7 @@ int GameCore::ReportResult()
 		if(valueA > valueB)
 		{
 			WriteVideo_End(round,1);
-			cout<<"PlayerA wins the game!"<<endl;
+			cout<<"  PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
 			return 1;
 		}
@@ -823,7 +823,7 @@ int GameCore::ReportResult()
 			if(valueB > valueA)
 			{
 				WriteVideo_End(round,2);
-				cout<<"PlayerB wins the game!"<<endl;
+				cout<<"  PlayerB wins the game!"<<endl;
 				(*fresult)<<"PlayerB wins the game!"<<endl;
 				return 2;
 			}
@@ -831,7 +831,7 @@ int GameCore::ReportResult()
 			{
 				WriteVideo_End(round,0);
 
-				cout<<"It ends in a draw."<<endl;
+				cout<<"  It ends in a draw."<<endl;
 				(*fresult)<<"It ends in a draw."<<endl;
 				return 3;
 			}
@@ -842,21 +842,21 @@ int GameCore::ReportResult()
 		if(nError == 1)
 		{
 			WriteVideo_End(round,2);
-			cout<<"PlayerB wins the game!"<<endl;
+			cout<<"  PlayerB wins the game!"<<endl;
 			(*fresult)<<"PlayerB wins the game!"<<endl;
 			return 2;
 		}
 		if(nError == 2)
 		{
 			WriteVideo_End(round,1);
-			cout<<"PlayerA wins the game!"<<endl;
+			cout<<"  PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
 			return 1;
 		}
 		if(valueA > valueB)
 		{
 			WriteVideo_End(round,1);
-			cout<<"PlayerA wins the game!"<<endl;
+			cout<<"  PlayerA wins the game!"<<endl;
 			(*fresult)<<"PlayerA wins the game!"<<endl;
 			return 1;
 		}
@@ -864,7 +864,7 @@ int GameCore::ReportResult()
 			if(valueB > valueA)
 			{
 				WriteVideo_End(round,2);
-				cout<<"PlayerB wins the game!"<<endl;
+				cout<<"  PlayerB wins the game!"<<endl;
 				(*fresult)<<"PlayerB wins the game!"<<endl;
 				return 2;
 			}
@@ -872,7 +872,7 @@ int GameCore::ReportResult()
 			{
 				WriteVideo_End(round,0);
 
-				cout<<"It ends in a draw."<<endl;
+				cout<<"  It ends in a draw."<<endl;
 				(*fresult)<<"It ends in a draw."<<endl;
 				return 3;
 			}

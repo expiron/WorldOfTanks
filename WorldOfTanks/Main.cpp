@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 
 #include <cmath>
+#include <cstdio>
 #include <algorithm>
 
 #include "WorldOfTanks.h"
@@ -14,6 +15,14 @@ struct Player    //竞赛Player结构定义.
 {
 	char pszName[32];    //名称.
 	double score;        //rank分.
+    int    change;       //变化.
+
+    Player()
+    {
+        ZeroMemory(pszName,32);
+        score = 1500.0f;
+        change = 0;
+    }
 };
 struct Match
 {
@@ -55,12 +64,14 @@ void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 	GenerateMatchList(mlist,plist,nPlayers,nMatch);    //生成对决名单.
 	
 	//Match in randomization.
-	for(int i = 0;i < 3;i++)
+	for(int i = 0;i < 5;i++)
 		StartMatch(i,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
 	ReportRank(plist,nPlayers);
 	WriteMatchCSV(mlist,nMatch,5);
 
-	system("pause");
+	cout<<"  ====================================End=====================================  "<<endl;
+	getchar();
+	//system("pause");
 	return;
 }
 //选手循环赛.
@@ -70,6 +81,7 @@ void StartMatch(int round,Match* mlist,Player* p,int n,int nMatch,TCHAR* envp[])
 	int nRet;
 	bool* matched;
 	double scoreA,scoreB;
+	double scoreAold,scoreBold;
 	double ea,eb;
 	int seed = 2;
 	for(int i = 0;i < 3;i++)
@@ -93,40 +105,54 @@ void StartMatch(int round,Match* mlist,Player* p,int n,int nMatch,TCHAR* envp[])
 		MultiByteToWideChar(CP_ACP,0,a->pszName,-1,argv[1],32);
 		MultiByteToWideChar(CP_ACP,0,b->pszName,-1,argv[2],32);
 		ReportRank(p,n);
+		for(int i = 0;i < n;i++)
+			p[i].change = 0;
 		nRet = JudgeMain(3,argv,envp,n);
 		switch(nRet)
 		{
 		case 0:
 			break;
 		case 1:
-			scoreA = a->score;
-			scoreB = b->score;
+			scoreAold = scoreA = a->score;
+			scoreBold = scoreB = b->score;
 			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
 			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
 			scoreA = scoreA + 32.0 * (1.0 - ea);
 			scoreB = scoreB + 32.0 * (0 - eb);
 			a->score = scoreA;
 			b->score = scoreB;
+			//a->change = 1;
+			//b->change = 2;
+			a->change = (scoreAold < scoreA ? 1 : (scoreAold > scoreA ? 2 : 0));
+			b->change = (scoreBold < scoreB ? 1 : (scoreBold > scoreB ? 2 : 0));
 			break;
 		case 2:
-			scoreA = a->score;
-			scoreB = b->score;
+			scoreAold = scoreA = a->score;
+			scoreBold = scoreB = b->score;
 			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
 			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
 			scoreA = scoreA + 32.0 * (0 - ea);
 			scoreB = scoreB + 32.0 * (1.0 - eb);
 			a->score = scoreA;
 			b->score = scoreB;
+			//a->change = 2;
+			//b->change = 1;
+			a->change = (scoreAold < scoreA ? 1 : (scoreAold > scoreA ? 2 : 0));
+			b->change = (scoreBold < scoreB ? 1 : (scoreBold > scoreB ? 2 : 0));
 			break;
 		case 3:
-			scoreA = a->score;
-			scoreB = b->score;
+			scoreAold = scoreA = a->score;
+			scoreBold = scoreB = b->score;
 			ea = (1/(1 + pow(10,(scoreB - scoreA) / 400)));
 			eb = (1/(1 + pow(10,(scoreA - scoreB) / 400)));
 			scoreA = scoreA + 32.0 * (0.5 - ea);
 			scoreB = scoreB + 32.0 * (0.5 - eb);
 			a->score = scoreA;
 			b->score = scoreB;
+			//a->change = 0;
+			//b->change = 0;
+			a->change = (scoreAold < scoreA ? 1 : (scoreAold > scoreA ? 2 : 0));
+			b->change = (scoreBold < scoreB ? 1 : (scoreBold > scoreB ? 2 : 0));
 			break;
 		}
 		system("cls");
@@ -196,9 +222,12 @@ bool ScoreComp(Player a,Player b)
 }
 void ReportRank(Player* p,int n)
 {
+	cout<<"  =================================PlayerRank=================================  "<<endl;
 	sort(p,p + n,ScoreComp);
 	for(int i = 0;i < n;i++)
-		cout<<setw(8)<<p[i].pszName<<' '<<setprecision(2)<<std::fixed<<p[i].score<<endl;
+		cout<<setw(26)<<p[i].pszName<<' '
+			<<setw(36)<<setprecision(2)<<std::fixed<<p[i].score
+			<<(p[i].change == 0 ? " -" : (p[i].change == 1 ? "    ↑" : "  ↓"))<<endl;
 }
 //写入CSV文件.
 void WriteMatchCSV(Match* mlist,int nMatch,int nRound)
@@ -267,19 +296,19 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD dwSize = 0;
 	COORD coo;
-	coo.Y = 3 + n;
+	coo.Y = 6 + n;
 
 	AnalyseCommandLine(argc,argv,pszCommand1,pszCommand2,pszPlayerNameA,pszPlayerNameB);
 	/*AfxMessageBox(pszCommand1);
 	AfxMessageBox(pszCommand2);*/
-	cout<<pszPlayerNameA<<" vs "<<pszPlayerNameB<<endl;
+	cout<<setw(38)<<pszPlayerNameA<<" vs "<<pszPlayerNameB<<'\n'<<endl;
 
 	//return 0;
 
-	cout<<"Initializing...";
+	cout<<"  Initializing...";
 	if(!playerA.Initialize(pszCommand1) || !playerB.Initialize(pszCommand2))
 	{
-		cerr<<"启动选手程序失败！(0x0001)"<<endl;
+		cerr<<"  启动选手程序失败！(0x0001)"<<endl;
 		goto ReleaseResource;
 	}
 
@@ -288,7 +317,7 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 
 	if(!gameCore.Initialize())
 	{
-		cerr<<"游戏状态初始化失败!(0x0002)"<<endl;
+		cerr<<"  游戏状态初始化失败!(0x0002)"<<endl;
 		goto ReleaseResource;
 	}
 	cout<<"OK!"<<endl;
@@ -296,15 +325,15 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 	gameCore.GenerateInitialData();
 	gameCore.DistributeData();
 
-	cout<<"The game is running....."<<endl;
-	cout<<"Round.01..."<<endl;
+	cout<<"  The game is running....."<<endl;
+	cout<<"  Round.01..."<<endl;
 	int round = 1;
 
 	while( true )
 	{
-		coo.X = 6;
+		coo.X = 8;
 		FillConsoleOutputCharacterA(hOut,round / 10 + 48,1,coo,&dwSize);
-		coo.X = 7;
+		coo.X = 9;
 		FillConsoleOutputCharacterA(hOut,round % 10 + 48,1,coo,&dwSize);
 
 		if(!gameCore.PlayerAsTurn())
@@ -321,7 +350,7 @@ int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 
 	//Report
 ReportResult:
-	cout<<"The report:"<<endl;
+	cout<<"  The report:"<<endl;
 	return gameCore.ReportResult();
 	::Sleep(1000);
 	//Cleaning.
