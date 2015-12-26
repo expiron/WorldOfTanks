@@ -45,6 +45,8 @@ void ReportRank(Player*,int);
 void WriteMatchCSV(Match*,int,int);
 //比赛主函数.
 int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int);
+//拷贝视频文件.
+void CopyFile(Player*);
 
 void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 {
@@ -64,12 +66,13 @@ void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 	GenerateMatchList(mlist,plist,nPlayers,nMatch);    //生成对决名单.
 	
 	//Match in randomization.
-	for(int i = 0;i < 5;i++)
+	for(int i = 0;i < 4;i++)
 		StartMatch(i,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
 	ReportRank(plist,nPlayers);
 	WriteMatchCSV(mlist,nMatch,5);
 
 	cout<<"  ====================================End=====================================  "<<endl;
+	CopyFile(plist);
 	getchar();
 	//system("pause");
 	return;
@@ -281,6 +284,27 @@ bool InitializeMatch(Player* p,int& n)
 	flist->close();
 	delete flist;
 	return true;
+}
+//拷贝视频文件.
+void CopyFile(Player* p)
+{
+	char str1[1024] = "Copy ";
+	char str2[1024] = "Copy ";
+
+	strcat(str1,p[0].pszName);
+	strcat(str1,"_vs_");
+	strcat(str1,p[1].pszName);
+	strcat(str1,"_video.txt .\\Player\\>nul");
+
+	strcat(str2,p[1].pszName);
+	strcat(str2,"_vs_");
+	strcat(str2,p[0].pszName);
+	strcat(str2,"_video.txt .\\Player\\>nul");
+	//cout<<str1<<endl<<str2<<endl;
+	//cout<<p[0].pszName<<endl<<p[1].pszName<<endl;
+	//system("@echo off");
+	system(str1);
+	system(str2);
 }
 int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 {
