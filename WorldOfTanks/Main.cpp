@@ -66,8 +66,13 @@ void Main(int argc,TCHAR* argv[],TCHAR* envp[])
 	GenerateMatchList(mlist,plist,nPlayers,nMatch);    //生成对决名单.
 	
 	//Match in randomization.
+	if(nPlayers != 2)
+	{
 	for(int i = 0;i < 4;i++)
 		StartMatch(i,mlist,plist,nPlayers,nMatch,envp);    //开始比赛.
+	}
+	else
+		StartMatch(0,mlist,plist,nPlayers,nMatch,envp);
 	ReportRank(plist,nPlayers);
 	WriteMatchCSV(mlist,nMatch,5);
 
@@ -305,6 +310,10 @@ void CopyFile(Player* p)
 	//system("@echo off");
 	system(str1);
 	system(str2);
+	ofstream fout("Players.list");
+	fout<<p[0].pszName<<endl
+		<<p[1].pszName<<endl;
+	fout.close();
 }
 int JudgeMain(int argc, TCHAR* argv[], TCHAR* envp[],int n)
 {
